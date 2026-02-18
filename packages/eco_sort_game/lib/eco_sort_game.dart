@@ -1,2 +1,2 @@
-library eco_sort_game;
+library;
 export 'src/eco_sort_module.dart';

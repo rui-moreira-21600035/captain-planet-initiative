@@ -1,6 +1,7 @@
 name: eco_sort_game
 description: "Eco Sort minigame (Flame)."
 version: 0.0.1
+publish_to: none
 homepage:
 
 environment:
@@ -9,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  common_gamekit:
+    path: ../../packages/common_gamekit
   flame: ^1.9.1
   sqflite: ^2.3.0
   path: ^1.8.3
@@ -26,7 +29,12 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-      - assets/images/
+    - assets/images/containers/
+    - assets/images/waste_items/blue/
+    - assets/images/waste_items/green/
+    - assets/images/waste_items/yellow/
+    - assets/images/waste_items/brown/
+    - assets/data/eco_sort/catalog_v1.json
 
   # To add assets to your package, add an assets section, like this:
   # assets:

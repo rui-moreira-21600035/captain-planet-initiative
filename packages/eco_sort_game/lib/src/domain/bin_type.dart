@@ -1,0 +1,1 @@
+enum BinType { blue, green, yellow, brown }

@@ -1,21 +1,10 @@
 import 'package:common_gamekit/common_gamekit.dart';
-import 'package:flutter/widgets.dart';
 
-class EcoSortPage extends StatelessWidget {
-  const EcoSortPage({super.key});
+import './presentation/eco_sort_page.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    // TODO: substituir pelo teu GameWidget( game: EcoSortFlameGame() )
-    return const Center(child: Text('Eco Sort (placeholder)'));
-  }
-}
-
-const ecoSortModule = GameModule(
-  id: 'eco_sort',
-  name: 'Eco Sort',
-  description: 'Identifica o contentor certo para cada item.',
-  pageBuilder: _ecoSortPageBuilder,
-);
-
-Widget _ecoSortPageBuilder() => const EcoSortPage();
+GameModule ecoSortModule(ScoreRepository repo) => GameModule(
+      id: 'eco_sort',
+      name: 'Eco Sort',
+      description: 'Clica no contentor certo para cada item.',
+      pageBuilder: () => EcoSortPage(scoreRepo: repo),
+    );

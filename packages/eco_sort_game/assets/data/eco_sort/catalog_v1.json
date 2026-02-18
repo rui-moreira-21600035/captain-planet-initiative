@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "bins": [
+    {
+      "id": "blue",
+      "label": "Papel",
+      "asset": "containers/blue.png"
+    },
+    {
+      "id": "green",
+      "label": "Vidro",
+      "asset": "containers/green.png"
+    },
+    {
+      "id": "yellow",
+      "label": "Plástico/Metal",
+      "asset": "containers/yellow.png"
+    },
+    {
+      "id": "brown",
+      "label": "Orgânico",
+      "asset": "containers/brown.png"
+    }
+  ],
+  "items": [
+    {
+      "id": "blue_cardboard_box",
+      "asset": "waste_items/blue/cardboard_box.png",
+      "bin": "blue",
+      "label": "Cardboard Box"
+    },
+    {
+      "id": "blue_old_newspaper",
+      "asset": "waste_items/blue/old_newspaper.png",
+      "bin": "blue",
+      "label": "Old Newspaper"
+    },
+    {
+      "id": "brown_apple",
+      "asset": "waste_items/brown/apple.png",
+      "bin": "brown",
+      "label": "Apple"
+    },
+    {
+      "id": "brown_banana_peel",
+      "asset": "waste_items/brown/banana_peel.png",
+      "bin": "brown",
+      "label": "Banana Peel"
+    },
+    {
+      "id": "brown_fish_bones",
+      "asset": "waste_items/brown/fish_bones.png",
+      "bin": "brown",
+      "label": "Fish Bones"
+    },
+    {
+      "id": "brown_pizza_slice",
+      "asset": "waste_items/brown/pizza_slice.png",
+      "bin": "brown",
+      "label": "Pizza Slice"
+    },
+    {
+      "id": "green_broken_bottle",
+      "asset": "waste_items/green/broken_bottle.png",
+      "bin": "green",
+      "label": "Broken Bottle"
+    },
+    {
+      "id": "green_raspberry_jam_jar",
+      "asset": "waste_items/green/raspberry_jam_jar.png",
+      "bin": "green",
+      "label": "Raspberry Jam Jar"
+    },
+    {
+      "id": "green_wine_bottle",
+      "asset": "waste_items/green/wine_bottle.png",
+      "bin": "green",
+      "label": "Wine Bottle"
+    },
+    {
+      "id": "yellow_milk_packet",
+      "asset": "waste_items/yellow/milk_packet.png",
+      "bin": "yellow",
+      "label": "Milk Packet"
+    },
+    {
+      "id": "yellow_orange_juice_packet",
+      "asset": "waste_items/yellow/orange_juice_packet.png",
+      "bin": "yellow",
+      "label": "Orange Juice Packet"
+    },
+    {
+      "id": "yellow_soda_can",
+      "asset": "waste_items/yellow/soda_can.png",
+      "bin": "yellow",
+      "label": "Soda Can"
+    },
+    {
+      "id": "yellow_water_bottle",
+      "asset": "waste_items/yellow/water_bottle.png",
+      "bin": "yellow",
+      "label": "Water Bottle"
+    },
+    {
+      "id": "yellow_yogurt_can",
+      "asset": "waste_items/yellow/yogurt_can.png",
+      "bin": "yellow",
+      "label": "Yogurt Can"
+    }
+  ]
+}

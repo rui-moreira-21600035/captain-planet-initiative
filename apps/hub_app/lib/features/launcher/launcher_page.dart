@@ -6,6 +6,7 @@ class LauncherPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gameRegistry = buildGameRegistry();
     return Scaffold(
       appBar: AppBar(title: const Text('Hub de Mini-jogos')),
       body: ListView.separated(
@@ -14,6 +15,7 @@ class LauncherPage extends StatelessWidget {
         itemBuilder: (context, index) {
           final module = gameRegistry[index];
           return ListTile(
+            key: Key(module.id),
             title: Text(module.name),
             subtitle: Text(module.description),
             trailing: const Icon(Icons.chevron_right),

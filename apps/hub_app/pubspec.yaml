@@ -1,5 +1,5 @@
 name: hub_app
-description: "A new Flutter project."
+description: "The Captain Planet Initiative Hub App. This app serves as the central hub for all the mini-games in the initiative, providing a unified interface for users to access and play the games. It also manages user profiles, tracks scores across games, and offers a cohesive experience for players of all ages."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,7 +30,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   common_gamekit:
     path: ../../packages/common_gamekit
   eco_sort_game:

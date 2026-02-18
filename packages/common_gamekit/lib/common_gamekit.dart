@@ -1,9 +1,7 @@
-library common_gamekit;
+library;
 
 export 'src/game_module.dart';
 
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+export 'src/scores/score_entry.dart';
+export 'src/scores/score_repository.dart';
+export 'src/scores/local_score_repository_sqflite.dart';

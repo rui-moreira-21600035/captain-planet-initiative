@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'features/launcher/launcher_page.dart';
 
-void main() => runApp(const HubApp());
+void main() async {
+    runApp(const HubApp()
+  );
+}
 
 class HubApp extends StatelessWidget {
   const HubApp({super.key});
