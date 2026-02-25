@@ -41,7 +41,7 @@ class ScoresDb {
   }
 
   Future<Database> get database async {
-    assert(_basePathProvider != null); // apanha em debug se não tiver sido injetado
+// apanha em debug se não tiver sido injetado
     final existing = _db;
     if (existing != null) return existing;
 
