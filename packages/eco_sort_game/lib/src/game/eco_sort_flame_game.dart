@@ -318,16 +318,16 @@ class EcoSortFlameGame extends FlameGame {
       ),
     );
 
-    // 3) Frame para o lixo (centrado no painel esquerdo)
+    // 3) Frame para o lixo (centrado no painel esquerdo), invisível
+    // Mantém a referência de layout sem desenhar borda.
     world.add(
       RectangleComponent(
-        position: frameCenter ,
+        position: frameCenter,
         size: frameSize,
         anchor: Anchor.center,
         paint: Paint()
           ..style = PaintingStyle.stroke
-          // ..strokeWidth = 3
-          // ..color = const Color(0x33000000),
+          ..color = const Color(0x00000000),
       ),
     );
 
@@ -531,25 +531,27 @@ class EcoSortFlameGame extends FlameGame {
     final sp = _waste.sprite;
     if (sp == null) return;
 
-    final maxW = frameSize.x * 0.90; // deixa margem
-    final maxH = frameSize.y * 0.90;
+    final maxW = frameSize.x * 0.90; // deixa margem horizontal
+    final maxH = frameSize.y * 0.82; // cap vertical mais conservador
 
     final srcW = sp.srcSize.x;
     final srcH = sp.srcSize.y;
     if (srcW <= 0 || srcH <= 0) return;
 
-    // contain
-    final scaleW = maxW / srcW;
-    final scaleH = maxH / srcH;
-    var scale = math.min(scaleW, scaleH);
+    // Tenta normalizar a altura visual entre itens com rácios diferentes.
+    final targetH = frameSize.y * 0.62;
+    var scale = targetH / srcH;
 
-    // clamp por área (perceptivo)
-    final maxArea = maxW * maxH * 0.85;
-    final scaledArea = (srcW * scale) * (srcH * scale);
+    // Se ao normalizar altura exceder largura, reduz para caber.
+    final scaledW = srcW * scale;
+    if (scaledW > maxW) {
+      scale = maxW / srcW;
+    }
 
-    if (scaledArea > maxArea) {
-      final areaScale = math.sqrt(maxArea / scaledArea);
-      scale *= areaScale;
+    // Guardrail final para nunca passar o limite vertical.
+    final scaledH = srcH * scale;
+    if (scaledH > maxH) {
+      scale = maxH / srcH;
     }
 
     _waste.size = Vector2(srcW * scale, srcH * scale);

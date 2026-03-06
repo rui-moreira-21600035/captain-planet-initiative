@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'features/launcher/launcher_page.dart';
 
-void main() async {
-    runApp(const HubApp()
-  );
+import 'features/navigation/launcher_shell.dart';
+
+void main() {
+  runApp(const HubApp());
 }
 
 class HubApp extends StatelessWidget {
@@ -12,9 +12,13 @@ class HubApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Minigames Hub',
-      theme: ThemeData(useMaterial3: true),
-      home: const LauncherPage(),
+      title: 'Captain Planet Hub',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: Colors.green,
+      ),
+      home: const LauncherShell(),
     );
   }
 }

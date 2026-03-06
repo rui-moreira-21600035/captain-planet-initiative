@@ -39,7 +39,7 @@ It includes:
 Clone and enter the repository:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/rui-moreira-21600035/captain-planet-initiative.git
 cd captain_planet_initiative
 ```
 
