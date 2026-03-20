@@ -30,10 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.3.1
   common_gamekit:
     path: ../../packages/common_gamekit
   eco_sort_game:
     path: ../../packages/eco_sort_game
+  eco_guess_game:
+    path: ../../packages/eco_guess_game
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

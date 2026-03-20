@@ -1,0 +1,152 @@
+[
+  {
+    "id": "f1",
+    "text": "Separar corretamente papel, vidro, plástico e metal reduz o envio de resíduos para aterro e poupa matérias-primas.",
+    "theme": "residuos"
+  },
+  {
+    "id": "f2",
+    "text": "Produzir alumínio reciclado consome muito menos energia do que produzir alumínio a partir de minério.",
+    "theme": "energia"
+  },
+  {
+    "id": "f3",
+    "text": "Reduzir o desperdício alimentar poupa água, energia e emissões associadas à produção e transporte.",
+    "theme": "alimentacao"
+  },
+  {
+    "id": "f4",
+    "text": "Usar garrafa reutilizável evita o consumo repetido de plástico de uso único e reduz lixo no ambiente.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f5",
+    "text": "Tomar duches mais curtos é uma forma simples de reduzir o consumo doméstico de água.",
+    "theme": "agua"
+  },
+  {
+    "id": "f6",
+    "text": "Lâmpadas LED consomem menos eletricidade e duram mais tempo do que lâmpadas tradicionais.",
+    "theme": "energia"
+  },
+  {
+    "id": "f7",
+    "text": "A compostagem transforma resíduos orgânicos em fertilizante e reduz a quantidade de lixo indiferenciado.",
+    "theme": "residuos"
+  },
+  {
+    "id": "f8",
+    "text": "Plantar árvores ajuda a criar sombra, reduzir a temperatura local e melhorar a qualidade do ar.",
+    "theme": "biodiversidade"
+  },
+  {
+    "id": "f9",
+    "text": "Optar por transportes públicos ou partilha de boleia pode reduzir emissões por pessoa em deslocações diárias.",
+    "theme": "mobilidade"
+  },
+  {
+    "id": "f10",
+    "text": "Desligar equipamentos em standby reduz consumo elétrico invisível que pode somar ao longo do mês.",
+    "theme": "energia"
+  },
+  {
+    "id": "f11",
+    "text": "A reutilização prolonga a vida útil de produtos e reduz a necessidade de produzir novos.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f12",
+    "text": "Reciclar vidro permite reaproveitar o material várias vezes sem perder qualidade.",
+    "theme": "residuos"
+  },
+  {
+    "id": "f13",
+    "text": "Comprar a granel pode reduzir embalagens e o desperdício associado ao consumo diário.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f14",
+    "text": "Isolar janelas e portas ajuda a manter a casa confortável e diminui o gasto energético com aquecimento/arrefecimento.",
+    "theme": "energia"
+  },
+  {
+    "id": "f15",
+    "text": "Evitar descartar óleo alimentar no cano protege redes de esgoto e reduz contaminação da água.",
+    "theme": "agua"
+  },
+  {
+    "id": "f16",
+    "text": "A biodiversidade aumenta a resiliência dos ecossistemas e ajuda a manter serviços essenciais como polinização.",
+    "theme": "biodiversidade"
+  },
+  {
+    "id": "f17",
+    "text": "Preferir produtos sazonais pode reduzir a necessidade de transporte e armazenamento prolongado.",
+    "theme": "alimentacao"
+  },
+  {
+    "id": "f18",
+    "text": "Reparar roupa e eletrónica pode ser mais sustentável do que substituir, reduzindo resíduos e extração de recursos.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f19",
+    "text": "Usar modos de poupança de energia em computadores e telemóveis pode reduzir consumo sem afetar o uso normal.",
+    "theme": "energia"
+  },
+  {
+    "id": "f20",
+    "text": "Separar resíduos orgânicos do indiferenciado ajuda a valorizar materiais e a melhorar a gestão de resíduos.",
+    "theme": "residuos"
+  },
+  {
+    "id": "f21",
+    "text": "Reduzir carne em algumas refeições semanais pode diminuir a pegada ambiental da alimentação.",
+    "theme": "alimentacao"
+  },
+  {
+    "id": "f22",
+    "text": "Apagar luzes em divisões vazias é um hábito simples com impacto direto no consumo elétrico.",
+    "theme": "energia"
+  },
+  {
+    "id": "f23",
+    "text": "Levar saco reutilizável às compras ajuda a reduzir o uso de sacos descartáveis.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f24",
+    "text": "Proteger habitats naturais ajuda a preservar espécies e a manter equilíbrio nos ecossistemas.",
+    "theme": "biodiversidade"
+  },
+  {
+    "id": "f25",
+    "text": "Recolher pilhas e eletrónica em pontos próprios evita contaminação por metais e químicos.",
+    "theme": "residuos"
+  },
+  {
+    "id": "f26",
+    "text": "Usar água fria na lavagem quando possível pode reduzir energia, mantendo bons resultados em muitas situações.",
+    "theme": "energia"
+  },
+  {
+    "id": "f27",
+    "text": "Fechar a torneira ao escovar os dentes é uma forma prática de poupar água no dia a dia.",
+    "theme": "agua"
+  },
+  {
+    "id": "f28",
+    "text": "Escolher produtos duráveis e reparáveis reduz substituições frequentes e o volume de resíduos gerados.",
+    "theme": "consumo"
+  },
+  {
+    "id": "f29",
+    "text": "A poluição luminosa pode afetar insetos e aves; usar iluminação exterior apenas quando necessário ajuda a reduzir impactos.",
+    "theme": "biodiversidade"
+  },
+  {
+    "id": "f30",
+    "text": "Ao planear compras e refeições, consegues reduzir sobras e desperdício alimentar ao longo da semana.",
+    "theme": "alimentacao"
+  }
+]

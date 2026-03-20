@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/navigation/launcher_shell.dart';
 
 void main() {
-  runApp(const HubApp());
+  runApp(const ProviderScope(child: HubApp()));
 }
 
 class HubApp extends StatelessWidget {

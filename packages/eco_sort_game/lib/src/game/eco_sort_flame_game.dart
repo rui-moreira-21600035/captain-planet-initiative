@@ -288,6 +288,8 @@ class EcoSortFlameGame extends FlameGame {
   Future<void> _buildScene() async {
     world.removeAll(world.children.toList());
 
+    // TODO: Criar uma progress bar até ao final da ronda (Progressbar/ Ronda X de Y)
+
     final w = logicalResolution.x;
     final h = logicalResolution.y;
     final leftW = logicalResolution.x * 0.30;

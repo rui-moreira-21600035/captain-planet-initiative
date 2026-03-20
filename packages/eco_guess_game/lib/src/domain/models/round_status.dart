@@ -1,0 +1,1 @@
+enum RoundStatus { playing, won, lost }
