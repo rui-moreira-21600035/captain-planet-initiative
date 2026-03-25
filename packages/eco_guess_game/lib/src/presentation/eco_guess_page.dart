@@ -10,10 +10,13 @@ import '../application/providers/providers.dart';
 import '../domain/models/difficulty.dart';
 import '../domain/services/masked_word.dart';
 
+enum EcoGuessMenuAction { resume, restart, exit }
+
 class EcoGuessPage extends ConsumerStatefulWidget {
   final ScoreRepository scoreRepo;
+  final EcoGuessDifficulty? difficulty;
 
-  const EcoGuessPage({super.key, required this.scoreRepo});
+  const EcoGuessPage({super.key, required this.scoreRepo, this.difficulty});
 
   @override
   ConsumerState<EcoGuessPage> createState() => _EcoGuessPageState();
@@ -36,7 +39,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
       _started = true;
       await ref
           .read(ecoGuessControllerProvider.notifier)
-          .startGame(EcoGuessDifficulty.easy);
+          .startGame(widget.difficulty ?? EcoGuessDifficulty.easy);
     });
   }
 
@@ -53,6 +56,50 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+  }
+
+  Future<void> _openMenu() async {
+    while (mounted) {
+      final action = await showGameMenuDialog<EcoGuessMenuAction>(
+        context: context,
+        title: 'MENU DE JOGO',
+        icon: const Icon(Icons.recycling, size: 42),
+        items: const [
+          GameMenuItem(label: 'RETOMAR JOGO', value: EcoGuessMenuAction.resume),
+          GameMenuItem(label: 'REINICIAR JOGO', value: EcoGuessMenuAction.restart),
+          GameMenuItem(
+            label: 'SAIR DO JOGO',
+            value: EcoGuessMenuAction.exit,
+            isDestructive: true,
+          ),
+        ],
+      );
+
+      if (!mounted) return;
+
+      switch (action) {
+        case null:
+        case EcoGuessMenuAction.resume:
+          return;
+
+        case EcoGuessMenuAction.restart:
+          await ref.read(ecoGuessControllerProvider.notifier)
+              .startGame(widget.difficulty ?? EcoGuessDifficulty.easy);
+          return;
+
+        case EcoGuessMenuAction.exit:
+          final confirmed = await showConfirmExitDialog(context);
+          if (!mounted) return;
+
+          if (confirmed) {
+            Navigator.of(context).pop(); // volta ao hub
+            return;
+          }
+
+          // CANCELADO -> volta ao while e reabre o menu
+          continue;
+      }
+    }
   }
 
   @override
@@ -74,119 +121,134 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     final isGameOver = session.status == EcoGuessSessionStatus.gameOver;
     final isPlaying = session.status == EcoGuessSessionStatus.playing;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Eco Guess')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              // COLUNA ESQUERDA
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ronda ${session.roundIndex + 1} / ${session.totalRounds}',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text('Tentativas: ${round.attemptsLeft}   •   Score: ${session.score}'),
-                    const SizedBox(height: 12),
-                    
-                    // TODO: eco-meter/forca aqui (placeholder)
-                    EcoMeter(
-                      attemptsLeft: round.attemptsLeft,
-                      maxAttempts: round.difficulty.maxAttempts,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Text(
-                      round.challenge.description,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // COLUNA DIREITA
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 6),
-                    Text(
-                      masked,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (isPlaying) ...[
-                      Expanded(
-                        child: _Keyboard(
-                          disabled: round.guessedLettersBase,
-                          onTap: controller.guess,
-                        ),
+    return PopScope(
+      canPop: false, // impede pop automático; nós decidimos
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _openMenu();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Eco Guess'),
+          actions:[
+            IconButton(
+              icon: const Icon(Icons.pause),
+              onPressed: _openMenu,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                // COLUNA ESQUERDA
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ronda ${session.roundIndex + 1} / ${session.totalRounds}',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                    ] else ...[
-                      // Painel de fim de ronda / jogo
-                      Expanded(
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 420),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      round.status == RoundStatus.won ? 'Acertaste!' : 'Falhaste!',
-                                      style: Theme.of(context).textTheme.titleLarge,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'A palavra era: ${round.challenge.word}',
-                                      style: Theme.of(context).textTheme.titleMedium,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          await controller.nextRound();
-                                        },
-                                        child: Text(isGameOver ? 'Ver resultado' : 'Próxima ronda'),
+                      const SizedBox(height: 6),
+                      Text('Tentativas: ${round.attemptsLeft}   •   Score: ${session.score}'),
+                      const SizedBox(height: 12),
+                      
+                      // TODO: eco-meter/forca aqui (placeholder)
+                      EcoMeter(
+                        attemptsLeft: round.attemptsLeft,
+                        maxAttempts: round.difficulty.maxAttempts,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        round.challenge.description,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // COLUNA DIREITA
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 6),
+                      Text(
+                        masked,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (isPlaying) ...[
+                        Expanded(
+                          child: _Keyboard(
+                            disabled: round.guessedLettersBase,
+                            onTap: controller.guess,
+                          ),
+                        ),
+                      ] else ...[
+                        // Painel de fim de ronda / jogo
+                        Expanded(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 420),
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        round.status == RoundStatus.won ? 'Acertaste!' : 'Falhaste!',
+                                        style: Theme.of(context).textTheme.titleLarge,
+                                        textAlign: TextAlign.center,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'A palavra era: ${round.challenge.word}',
+                                        style: Theme.of(context).textTheme.titleMedium,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            await controller.nextRound();
+                                          },
+                                          child: Text(isGameOver ? 'Ver resultado' : 'Próxima ronda'),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
+      )
     );
   }
 }

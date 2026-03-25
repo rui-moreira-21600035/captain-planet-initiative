@@ -5,14 +5,21 @@ It includes:
 
 - `hub_app`: launcher app that lists and opens available games.
 - `common_gamekit`: shared contracts and score persistence layer.
-- `eco_sort_game`: current playable game module (Flame-based).
+- `eco_sort_game`: Eco Sort game module (Flame-based).
+- `eco_guess_game`: Eco Guess game module (hangman-style word guess with eco challenge content).
 
-## Current Game
+## Current Games
 
 - **Eco Sort** (`id: eco_sort`)
-- Goal: place each waste item in the correct recycling container.
-- Integrated into the hub through a`GameModule` registry.
-- Session results are persisted locally through`sqflite`.
+  - Goal: place each waste item in the correct recycling container.
+  - Hub integration via `GameModule` registry.
+  - Session results persisted locally via `sqflite`.
+
+- **Eco Guess** (`id: eco_guess`)
+  - Goal: guess the hidden word related to eco-challenges.
+  - Interactive UI with hints, difficulty levels, and limited lives.
+  - Hub integration via `GameModule` registry.
+  - Session results also persisted via `sqflite`.
 
 ## Repository Structure
 
@@ -22,7 +29,8 @@ It includes:
 │   └── hub_app/                 # Flutter app (launcher)
 ├── packages/
 │   ├── common_gamekit/          # Shared interfaces and score repository
-│   └── eco_sort_game/           # Eco Sort game package
+│   ├── eco_sort_game/           # Eco Sort game package
+│   └── eco_guess_game/          # Eco Guess game package
 └── tools/
     ├── generate_eco_sort_catalog.py
     └── sanitize_assets.py
@@ -96,8 +104,9 @@ python3 tools/generate_eco_sort_catalog.py
   - `apps/hub_app/lib/features/launcher/game_registry.dart`
 - Shared score persistence is wired in:
   - `apps/hub_app/lib/app/di.dart`
-- Game package entrypoint:
+- Game packages entrypoint:
   - `packages/eco_sort_game/lib/eco_sort_game.dart`
+  - `packages/eco_guess_game/lib/eco_guess_game.dart`
 
 ## Roadmap
 
