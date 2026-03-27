@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "launch_android_emulator",
+            "type": "shell",
+            "command": "bash ${workspaceFolder}/.vscode/start_emulator.sh",
+            "problemMatcher": []
+        }
+    ]
+}

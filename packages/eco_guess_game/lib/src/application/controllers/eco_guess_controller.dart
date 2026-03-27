@@ -16,6 +16,12 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
 
   late final ChallengeRepository _challenges;
 
+  // Pool filtrado por dificuldade (cache em memória)
+  final Map<EcoGuessDifficulty, List<Challenge>> _poolByDifficulty = {};
+
+  // “Baralho” da sessão actual (sem repetição)
+  List<Challenge> _deck = [];
+
   @override
   EcoGuessSessionState build() {
     _challenges = ref.read(challengeRepositoryProvider);
@@ -23,10 +29,17 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
   }
 
   Future<void> startGame(EcoGuessDifficulty difficulty) async {
-    final list = await _challenges.loadAll();
-    if (list.isEmpty) {
+    final all = await _challenges.loadAll();
+    if (all.isEmpty) {
       throw StateError('No challenges found.');
     }
+
+    final pool = _getPool(all, difficulty);
+    if (pool.isEmpty) {
+      throw StateError('No challenges found for difficulty: $difficulty');
+    }
+
+    _resetDeck(pool);
 
     state = EcoGuessSessionState(
       status: EcoGuessSessionStatus.playing,
@@ -35,7 +48,7 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
       totalRounds: 5,
       score: 0,
       correctCount: 0,
-      round: _newRound(list, difficulty),
+      round: _newRound(difficulty),
     );
   }
 
@@ -91,7 +104,14 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
       return;
     }
 
-    final list = await _challenges.loadAll();
+    // Garante que temos deck pronto (e rebaralha se necessário)
+    final all = await _challenges.loadAll();
+    final pool = _getPool(all, state.difficulty);
+    if (pool.isEmpty) {
+      throw StateError('No challenges found for difficulty: ${state.difficulty}');
+    }
+    if (_deck.isEmpty) _resetDeck(pool);
+
     state = EcoGuessSessionState(
       status: EcoGuessSessionStatus.playing,
       difficulty: state.difficulty,
@@ -99,13 +119,39 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
       totalRounds: state.totalRounds,
       score: state.score,
       correctCount: state.correctCount,
-      round: _newRound(list, state.difficulty),
+      round: _newRound(state.difficulty),
     );
   }
 
-  RoundState _newRound(List<Challenge> list, EcoGuessDifficulty difficulty) {
-    final challenge = list[_rng.nextInt(list.length)];
-    final revealIdx = _pickRevealIndexes(challenge.word, difficulty);
+  // ---------- Internals ----------
+
+  List<Challenge> _getPool(List<Challenge> all, EcoGuessDifficulty difficulty) {
+    return _poolByDifficulty.putIfAbsent(
+      difficulty,
+      () => all.where((c) => c.difficulty == difficulty).toList(growable: false),
+    );
+  }
+
+  void _resetDeck(List<Challenge> pool) {
+    _deck = pool.toList(growable: true);
+    _deck.shuffle(_rng);
+  }
+
+  Challenge _drawChallenge(EcoGuessDifficulty difficulty) {
+    if (_deck.isEmpty) {
+      final pool = _poolByDifficulty[difficulty] ?? const <Challenge>[];
+      if (pool.isEmpty) {
+        throw StateError('Deck empty and pool missing for difficulty: $difficulty');
+      }
+      _resetDeck(pool);
+    }
+    return _deck.removeLast();
+  }
+
+  RoundState _newRound(EcoGuessDifficulty difficulty) {
+    final challenge = _drawChallenge(difficulty);
+    final revealIdx = pickRevealIndexes(challenge.word, difficulty, _rng);
+
     return _engine.startRound(
       challenge: challenge,
       difficulty: difficulty,
@@ -113,21 +159,23 @@ class EcoGuessController extends Notifier<EcoGuessSessionState> {
     );
   }
 
-  Set<int> _pickRevealIndexes(String word, EcoGuessDifficulty difficulty) {
+  Set<int> pickRevealIndexes(String word, EcoGuessDifficulty difficulty, Random rng) {
     final normalized = LetterNormalizer.normalizeWord(word);
+
     final letterIndexes = <int>[];
     for (var i = 0; i < normalized.length; i++) {
       final ch = normalized[i];
       final code = ch.codeUnitAt(0);
-      if (code >= 65 && code <= 90) letterIndexes.add(i);
+      final isLetter = code >= 65 && code <= 90;
+      if (isLetter) letterIndexes.add(i);
     }
 
-    final target = max(
-      difficulty.minReveals,
-      (letterIndexes.length * difficulty.revealRatio).ceil(),
-    );
+    final rawTarget = (letterIndexes.length * difficulty.revealRatio).ceil();
+    final target = rawTarget
+        .clamp(difficulty.minReveals, difficulty.maxReveals)
+        .clamp(0, letterIndexes.length);
 
-    letterIndexes.shuffle(_rng);
-    return letterIndexes.take(min(target, letterIndexes.length)).toSet();
+    letterIndexes.shuffle(rng);
+    return letterIndexes.take(target).toSet();
   }
 }

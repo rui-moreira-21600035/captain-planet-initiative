@@ -24,6 +24,7 @@ class EcoGuessPage extends ConsumerStatefulWidget {
 
 class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
   var _started = false;
+  EcoGuessDifficulty _selectedDifficulty = EcoGuessDifficulty.easy;
 
   @override
   void initState() {
@@ -37,10 +38,36 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (_started) return;
       _started = true;
+
+      final choice = await showDifficultyDialog(context);
+    if (!mounted) return;
+
+    if (choice == null) {
+      // cancelou -> volta ao hub
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // Mapeamento common_gamekit -> eco_guess_game
+    _selectedDifficulty = _mapDifficulty(choice);
+
       await ref
           .read(ecoGuessControllerProvider.notifier)
-          .startGame(widget.difficulty ?? EcoGuessDifficulty.easy);
+          .startGame(_selectedDifficulty);
     });
+  }
+
+  EcoGuessDifficulty _mapDifficulty(GameDifficulty d) {
+    switch (d) {
+      case GameDifficulty.easy:
+        return EcoGuessDifficulty.easy;
+
+      case GameDifficulty.medium:
+        return EcoGuessDifficulty.medium;
+
+      case GameDifficulty.hard:
+        return EcoGuessDifficulty.hard;
+    }
   }
 
   @override
@@ -63,7 +90,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
       final action = await showGameMenuDialog<EcoGuessMenuAction>(
         context: context,
         title: 'MENU DE JOGO',
-        icon: const Icon(Icons.recycling, size: 42),
+        icon: const Icon(Icons.recycling, size: 42, color: Colors.green),
         items: const [
           GameMenuItem(label: 'RETOMAR JOGO', value: EcoGuessMenuAction.resume),
           GameMenuItem(label: 'REINICIAR JOGO', value: EcoGuessMenuAction.restart),
@@ -84,7 +111,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
 
         case EcoGuessMenuAction.restart:
           await ref.read(ecoGuessControllerProvider.notifier)
-              .startGame(widget.difficulty ?? EcoGuessDifficulty.easy);
+            .startGame(_selectedDifficulty);
           return;
 
         case EcoGuessMenuAction.exit:
