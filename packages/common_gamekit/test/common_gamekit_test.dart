@@ -70,6 +70,7 @@ void main() {
         id: 'eco_sort',
         name: 'Eco Sort',
         description: 'Minijogo de reciclagem',
+        coverAsset: 'packages/eco_sort_game/assets/images/eco_sort_cover.png',
         pageBuilder: () => const Placeholder(),
       );
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hub_app/features/games/widgets/game_cover_card.dart';
 
 import 'game_registry.dart';
 
@@ -19,11 +20,11 @@ class GamesPage extends StatelessWidget {
       separatorBuilder: (_, __) => const Divider(height: 1),
       itemBuilder: (context, index) {
         final module = gameRegistry[index];
-        return ListTile(
+        return GameCoverCard(
           key: Key(module.id),
-          title: Text(module.name),
-          subtitle: Text(module.description),
-          trailing: const Icon(Icons.chevron_right),
+          title: module.name,
+          subtitle: module.description,
+          coverAsset: module.coverAsset,
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => module.pageBuilder()),

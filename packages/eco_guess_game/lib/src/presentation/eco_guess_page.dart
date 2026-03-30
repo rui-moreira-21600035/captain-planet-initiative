@@ -30,6 +30,9 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
   void initState() {
     super.initState();
 
+    // Fullscreen (esconde status + nav bars)
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
     SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -40,16 +43,16 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
       _started = true;
 
       final choice = await showDifficultyDialog(context);
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (choice == null) {
-      // cancelou -> volta ao hub
-      Navigator.of(context).pop();
-      return;
-    }
+      if (choice == null) {
+        // cancelou -> volta ao hub
+        Navigator.of(context).pop();
+        return;
+      }
 
-    // Mapeamento common_gamekit -> eco_guess_game
-    _selectedDifficulty = _mapDifficulty(choice);
+      // Mapeamento common_gamekit -> eco_guess_game
+      _selectedDifficulty = _mapDifficulty(choice);
 
       await ref
           .read(ecoGuessControllerProvider.notifier)
@@ -72,11 +75,15 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
 
   @override
   void dispose() {
-    // Restaura as orientações normais para o resto da app
+    // Repõe UI do sistema para o resto do hub
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+    // Repõe orientações normais (ou as que o hub quer)
     SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+
     super.dispose();
   }
 
@@ -89,11 +96,18 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     while (mounted) {
       final action = await showGameMenuDialog<EcoGuessMenuAction>(
         context: context,
-        title: 'MENU DE JOGO',
-        icon: const Icon(Icons.recycling, size: 42, color: Colors.green),
+        title: 'ECO GUESS - MENU',
+        icon: const Icon(
+          Icons.recycling,
+          size: 42,
+          color: Color.fromARGB(255, 128, 174, 121),
+        ),
         items: const [
           GameMenuItem(label: 'RETOMAR JOGO', value: EcoGuessMenuAction.resume),
-          GameMenuItem(label: 'REINICIAR JOGO', value: EcoGuessMenuAction.restart),
+          GameMenuItem(
+            label: 'REINICIAR JOGO',
+            value: EcoGuessMenuAction.restart,
+          ),
           GameMenuItem(
             label: 'SAIR DO JOGO',
             value: EcoGuessMenuAction.exit,
@@ -110,8 +124,9 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
           return;
 
         case EcoGuessMenuAction.restart:
-          await ref.read(ecoGuessControllerProvider.notifier)
-            .startGame(_selectedDifficulty);
+          await ref
+              .read(ecoGuessControllerProvider.notifier)
+              .startGame(_selectedDifficulty);
           return;
 
         case EcoGuessMenuAction.exit:
@@ -131,6 +146,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Lê o estado atual do jogo
     final session = ref.watch(ecoGuessControllerProvider);
     final controller = ref.read(ecoGuessControllerProvider.notifier);
     final round = session.round;
@@ -148,134 +164,213 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     final isGameOver = session.status == EcoGuessSessionStatus.gameOver;
     final isPlaying = session.status == EcoGuessSessionStatus.playing;
 
-    return PopScope(
-      canPop: false, // impede pop automático; nós decidimos
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        await _openMenu();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Eco Guess'),
-          actions:[
-            IconButton(
-              icon: const Icon(Icons.pause),
-              onPressed: _openMenu,
-            ),
-          ],
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(
+            'packages/eco_guess_game/assets/images/eco_guess_bg.png',
+          ),
+          fit: BoxFit.cover,
         ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                // COLUNA ESQUERDA
-                Expanded(
-                  flex: 4,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ronda ${session.roundIndex + 1} / ${session.totalRounds}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      Text('Tentativas: ${round.attemptsLeft}   •   Score: ${session.score}'),
-                      const SizedBox(height: 12),
-                      
-                      // TODO: eco-meter/forca aqui (placeholder)
-                      EcoMeter(
-                        attemptsLeft: round.attemptsLeft,
-                        maxAttempts: round.difficulty.maxAttempts,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Text(
-                        round.challenge.description,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-
-                      const SizedBox(height: 12),
-                    ],
-                  ),
+      ),
+      child: PopScope(
+        canPop: false, // impede pop automático; nós decidimos
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          await _openMenu();
+        },
+        child: Scaffold(
+          backgroundColor: Color.fromARGB(
+            40,
+            255,
+            255,
+            255,
+          ),
+          body: Stack(
+            children: [
+              // Wallpaper
+              Positioned.fill(
+                child: Image.asset(
+                  'packages/eco_guess_game/assets/images/eco_guess_bg.png',
+                  fit: BoxFit.cover,
                 ),
-
-                const SizedBox(width: 12),
-
-                // COLUNA DIREITA
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    16,
+                    75,
+                    16,
+                    30,
+                  ),
+                  child: Row(
                     children: [
-                      const SizedBox(height: 6),
-                      Text(
-                        masked,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              letterSpacing: 2,
-                              fontWeight: FontWeight.bold,
+                      Expanded( // Coluna Esquerda: Info da ronda, eco-meter, e pista
+                        flex: 3,
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withAlpha(230),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: Colors.grey.withAlpha(40),
                             ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      if (isPlaying) ...[
-                        Expanded(
-                          child: _Keyboard(
-                            disabled: round.guessedLettersBase,
-                            onTap: controller.guess,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ronda ${session.roundIndex + 1} / ${session.totalRounds}',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Tentativas: ${round.attemptsLeft}   •   Score: ${session.score}',
+                              ),
+                              const SizedBox(height: 12),
+                              EcoMeter(
+                                attemptsLeft: round.attemptsLeft,
+                                maxAttempts: round.difficulty.maxAttempts,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                round.challenge.description,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                              const SizedBox(height: 12),
+                            ],
                           ),
                         ),
-                      ] else ...[
-                        // Painel de fim de ronda / jogo
-                        Expanded(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 420),
-                              child: Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        round.status == RoundStatus.won ? 'Acertaste!' : 'Falhaste!',
-                                        style: Theme.of(context).textTheme.titleLarge,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'A palavra era: ${round.challenge.word}',
-                                        style: Theme.of(context).textTheme.titleMedium,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton(
-                                          onPressed: () async {
-                                            await controller.nextRound();
-                                          },
-                                          child: Text(isGameOver ? 'Ver resultado' : 'Próxima ronda'),
-                                        ),
-                                      ),
-                                    ],
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // Coluna Direita: Palavra mascarada e teclado / painel de fim de ronda
+                      Expanded(
+                        flex: 7,
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withAlpha(230),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: Colors.black.withAlpha(40),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 6),
+                              Text(
+                                masked,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      letterSpacing: 2,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              if (isPlaying) ...[
+                                Expanded(
+                                  child: _Keyboard(
+                                    disabled: round.guessedLettersBase,
+                                    onTap: controller.guess,
                                   ),
                                 ),
-                              ),
-                            ),
+                              ] else ...[
+                                // Painel de fim de ronda / jogo
+                                Expanded(
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 420,
+                                      ),
+                                      child: Card(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                round.status == RoundStatus.won
+                                                    ? 'Acertaste!'
+                                                    : 'Falhaste!',
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.titleLarge,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'A palavra era: ${round.challenge.word}',
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.titleMedium,
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: ElevatedButton(
+                                                  onPressed: () async {
+                                                    await controller
+                                                        .nextRound();
+                                                  },
+                                                  child: Text(
+                                                    isGameOver
+                                                        ? 'Ver resultado'
+                                                        : 'Próxima ronda',
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
-              ],
+              ),
+              SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                child: IconButton(
+                  iconSize: 28,
+                  icon: const Icon(Icons.pause, color: Colors.white),
+                  onPressed: _openMenu,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black54,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
+            ],
+          ),
         ),
-      )
+      ),
     );
   }
 }
@@ -295,17 +390,20 @@ class _Keyboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Ajusta estes valores conforme o “feeling” no emulador
-    const double gap = 8;        // espaço entre teclas
-    const double rowGap = 10;     // espaço entre linhas
-    const double minKey = 36;     // mínimo para dedos (em dp)
-    const double maxKey = 56;     // máximo para não ficar gigante em telas grandes
+    const double gap = 8; // espaço entre teclas
+    const double rowGap = 10; // espaço entre linhas
+    const double minKey = 36; // mínimo para dedos (em dp)
+    const double maxKey = 56; // máximo para não ficar gigante em telas grandes
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxKeysInRow = _rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+        final maxKeysInRow = _rows
+            .map((r) => r.length)
+            .reduce((a, b) => a > b ? a : b);
 
         // 1) limite por largura (linha de 10 teclas)
-        final widthAvailable = constraints.maxWidth - (gap * (maxKeysInRow - 1));
+        final widthAvailable =
+            constraints.maxWidth - (gap * (maxKeysInRow - 1));
         final keyByWidth = widthAvailable / maxKeysInRow;
 
         // 2) limite por altura (3 linhas + espaçamento entre linhas)
@@ -328,7 +426,9 @@ class _Keyboard extends StatelessWidget {
                 keySize: keySize,
                 gap: gap,
                 // offset para parecer teclado real
-                leftInset: i == 1 ? keySize * 0.5 : (i == 2 ? keySize * 1.0 : 0),
+                leftInset: i == 1
+                    ? keySize * 0.5
+                    : (i == 2 ? keySize * 1.0 : 0),
               ),
               if (i != _rows.length - 1) const SizedBox(height: rowGap),
             ],
@@ -407,8 +507,11 @@ class _KeyButton extends StatelessWidget {
           letter,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: disabled // teclas desativadas ficam mais escuras para indicar que já foram usadas
-                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35)
+            color:
+                disabled // teclas desativadas ficam mais escuras para indicar que já foram usadas
+                ? Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.35)
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),
