@@ -3,11 +3,12 @@ import 'package:eco_guess_game/src/domain/models/difficulty.dart';
 import 'package:eco_guess_game/src/domain/models/round_state.dart';
 import 'package:eco_guess_game/src/domain/models/round_status.dart';
 import 'package:eco_guess_game/src/domain/services/letter_normalizer.dart';
+import 'package:common_gamekit/common_gamekit.dart';
 
 class RoundEngine {
   RoundState startRound({
     required Challenge challenge,
-    required EcoGuessDifficulty difficulty,
+    required GameDifficulty difficulty,
     required Set<int> revealIndexes, // índices a revelar inicialmente
   }) {
     return RoundState(
@@ -16,6 +17,9 @@ class RoundEngine {
       guessedLettersBase: _lettersFromReveals(challenge.word, revealIndexes),
       attemptsLeft: difficulty.maxAttempts,
       status: RoundStatus.playing,
+      startedAtMs: DateTime.now().millisecondsSinceEpoch,
+      pausedAccumulatedMs: 0,
+      pausedAtMs: null,
     );
   }
 
@@ -43,6 +47,7 @@ class RoundEngine {
       guessedLettersBase: newGuessed,
       attemptsLeft: newAttempts,
       status: newStatus,
+      startedAtMs: state.startedAtMs,
     );
   }
 

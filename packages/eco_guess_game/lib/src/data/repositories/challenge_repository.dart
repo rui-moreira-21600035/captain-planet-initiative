@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:eco_guess_game/src/domain/models/difficulty.dart';
 import 'package:flutter/services.dart';
-import '../../domain/models/challenge.dart';
+import 'package:eco_guess_game/src/domain/models/challenge.dart';
 
 class ChallengeRepository {
   List<Challenge>? _cache;
@@ -19,7 +19,7 @@ class ChallengeRepository {
       word: (m['word'] as String).toUpperCase(),
       description: m['description'] as String,
       theme: m['theme'] as String,
-      difficulty: EcoGuessDifficultyX.fromJson(m['difficulty'] as String),
+      difficulty: EcoGuessDifficultyConfig.fromJson(m['difficulty'] as String),
     )).toList();
 
     return _cache!;

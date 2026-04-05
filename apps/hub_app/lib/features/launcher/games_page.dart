@@ -1,3 +1,4 @@
+import 'package:common_gamekit/common_gamekit.dart';
 import 'package:flutter/material.dart';
 import 'package:hub_app/features/games/widgets/game_cover_card.dart';
 
@@ -15,23 +16,25 @@ class GamesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameRegistry = buildGameRegistry();
-    return ListView.separated(
-      itemCount: gameRegistry.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final module = gameRegistry[index];
-        return GameCoverCard(
-          key: Key(module.id),
-          title: module.name,
-          subtitle: module.description,
-          coverAsset: module.coverAsset,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => module.pageBuilder()),
-            );
-          },
-        );
-      },
+    return AppPagePadding(
+      child: ListView.separated(
+        itemCount: gameRegistry.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final module = gameRegistry[index];
+          return GameCoverCard(
+            key: Key(module.id),
+            title: module.name,
+            subtitle: module.description,
+            coverAsset: module.coverAsset,
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => module.pageBuilder()));
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -1,9 +1,10 @@
+import 'package:common_gamekit/src/ui/widgets/difficulty_badge.dart';
 import 'package:flutter/material.dart';
-import '../domain/game_difficulty.dart';
+import '../../domain/game_difficulty.dart';
 
 Future<GameDifficulty?> showDifficultyDialog(
   BuildContext context, {
-  String title = 'DIFICULDADE',
+  String title = 'Seleccionar Dificuldade',
   GameDifficulty? initial,
 }) async {
   GameDifficulty selected = initial ?? GameDifficulty.easy;
@@ -52,7 +53,7 @@ Future<GameDifficulty?> showDifficultyDialog(
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 14),
-                      const Icon(Icons.tune, size: 42),
+                      DifficultyBadge(difficulty: selected),
                       const SizedBox(height: 16),
 
                       _DifficultyOption(
@@ -149,11 +150,11 @@ class _DifficultyOption extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: theme.colorScheme.onSurface.withOpacity(selected ? 0.45 : 0.20),
+            color: theme.colorScheme.onSurface.withAlpha(selected ? 115 : 51),
             width: selected ? 2.0 : 1.2,
           ),
           color: selected
-              ? theme.colorScheme.onSurface.withOpacity(0.04)
+              ? theme.colorScheme.onSurface.withAlpha(10)
               : theme.colorScheme.surface,
         ),
         child: Row(

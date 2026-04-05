@@ -1,20 +1,22 @@
-import 'package:eco_guess_game/src/application/state/eco_guess_session_state.dart';
-import 'package:eco_guess_game/src/domain/models/round_status.dart';
-import 'package:eco_guess_game/src/presentation/widgets/eco_lives_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:common_gamekit/common_gamekit.dart';
 
-import '../application/providers/providers.dart';
-import '../domain/models/difficulty.dart';
-import '../domain/services/masked_word.dart';
+import 'package:eco_guess_game/src/application/state/eco_guess_session_state.dart';
+import 'package:eco_guess_game/src/domain/models/round_status.dart';
+import 'package:eco_guess_game/src/presentation/widgets/eco_lives_bar.dart';
+import 'package:eco_guess_game/src/application/providers/providers.dart';
+import 'package:eco_guess_game/src/domain/models/difficulty.dart';
+import 'package:eco_guess_game/src/domain/services/masked_word.dart';
+import 'package:eco_guess_game/src/presentation/widgets/round_progress_bar.dart';
+
+import 'package:common_gamekit/common_gamekit.dart';
 
 enum EcoGuessMenuAction { resume, restart, exit }
 
 class EcoGuessPage extends ConsumerStatefulWidget {
   final ScoreRepository scoreRepo;
-  final EcoGuessDifficulty? difficulty;
+  final GameDifficulty? difficulty;
 
   const EcoGuessPage({super.key, required this.scoreRepo, this.difficulty});
 
@@ -24,7 +26,7 @@ class EcoGuessPage extends ConsumerStatefulWidget {
 
 class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
   var _started = false;
-  EcoGuessDifficulty _selectedDifficulty = EcoGuessDifficulty.easy;
+  GameDifficulty _selectedDifficulty = GameDifficulty.easy;
 
   @override
   void initState() {
@@ -42,35 +44,33 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
       if (_started) return;
       _started = true;
 
-      final choice = await showDifficultyDialog(context);
+      final started = await _pickDifficultyAndStart();
       if (!mounted) return;
 
-      if (choice == null) {
-        // cancelou -> volta ao hub
+      if (!started) {
         Navigator.of(context).pop();
-        return;
       }
-
-      // Mapeamento common_gamekit -> eco_guess_game
-      _selectedDifficulty = _mapDifficulty(choice);
-
-      await ref
-          .read(ecoGuessControllerProvider.notifier)
-          .startGame(_selectedDifficulty);
     });
   }
 
-  EcoGuessDifficulty _mapDifficulty(GameDifficulty d) {
-    switch (d) {
-      case GameDifficulty.easy:
-        return EcoGuessDifficulty.easy;
+  Future<bool> _pickDifficultyAndStart() async {
+    final choice = await showDifficultyDialog(
+      context,
+      initial: _selectedDifficulty,
+    );
+    if (!mounted) return false;
 
-      case GameDifficulty.medium:
-        return EcoGuessDifficulty.medium;
-
-      case GameDifficulty.hard:
-        return EcoGuessDifficulty.hard;
+    if (choice == null) {
+      return false;
     }
+
+    _selectedDifficulty = choice;
+
+    await ref
+        .read(ecoGuessControllerProvider.notifier)
+        .startGame(_selectedDifficulty);
+
+    return true;
   }
 
   @override
@@ -93,25 +93,29 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
   }
 
   Future<void> _openMenu() async {
+    ref.read(ecoGuessControllerProvider.notifier).pauseRoundTimer();
+
     while (mounted) {
       final action = await showGameMenuDialog<EcoGuessMenuAction>(
         context: context,
         title: 'ECO GUESS - MENU',
-        icon: const Icon(
-          Icons.recycling,
-          size: 42,
-          color: Color.fromARGB(255, 128, 174, 121),
+        headerBadge: DifficultyBadge(
+          difficulty: _selectedDifficulty,
         ),
         items: const [
-          GameMenuItem(label: 'RETOMAR JOGO', value: EcoGuessMenuAction.resume),
+          GameMenuItem(label: 'Retomar Jogo', value: EcoGuessMenuAction.resume, icon: Icon(Icons.play_arrow)),
           GameMenuItem(
-            label: 'REINICIAR JOGO',
+            label: 'Reiniciar Jogo',
             value: EcoGuessMenuAction.restart,
+            icon: Icon(Icons.refresh),
+
           ),
           GameMenuItem(
-            label: 'SAIR DO JOGO',
+            label: 'Sair do Jogo',
             value: EcoGuessMenuAction.exit,
             isDestructive: true,
+            icon: Icon(Icons.exit_to_app),
+
           ),
         ],
       );
@@ -121,13 +125,19 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
       switch (action) {
         case null:
         case EcoGuessMenuAction.resume:
+          ref.read(ecoGuessControllerProvider.notifier).resumeRoundTimer();
           return;
 
         case EcoGuessMenuAction.restart:
-          await ref
-              .read(ecoGuessControllerProvider.notifier)
-              .startGame(_selectedDifficulty);
-          return;
+          final restarted = await _pickDifficultyAndStart();
+          if (!mounted) return;
+
+          if (restarted) {
+            return;
+          }
+
+          // cancelou a escolha de dificuldade -> volta ao menu
+          continue;
 
         case EcoGuessMenuAction.exit:
           final confirmed = await showConfirmExitDialog(context);
@@ -163,6 +173,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     final isRoundEnd = session.status == EcoGuessSessionStatus.roundEnd;
     final isGameOver = session.status == EcoGuessSessionStatus.gameOver;
     final isPlaying = session.status == EcoGuessSessionStatus.playing;
+    final breakdown = session.lastRoundScore;
 
     return Container(
       decoration: const BoxDecoration(
@@ -180,12 +191,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
           await _openMenu();
         },
         child: Scaffold(
-          backgroundColor: Color.fromARGB(
-            40,
-            255,
-            255,
-            255,
-          ),
+          backgroundColor: Color.fromARGB(40, 255, 255, 255),
           body: Stack(
             children: [
               // Wallpaper
@@ -197,15 +203,12 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
               ),
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    16,
-                    75,
-                    16,
-                    30,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 75, 16, 30),
                   child: Row(
+                    // Layout principal: duas colunas (info + eco-meter + pista | palavra + teclado/painel)
                     children: [
-                      Expanded( // Coluna Esquerda: Info da ronda, eco-meter, e pista
+                      Expanded(
+                        // Coluna Esquerda: Info da ronda, eco-meter, e pista
                         flex: 3,
                         child: Container(
                           padding: const EdgeInsets.all(14),
@@ -222,22 +225,43 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Ronda ${session.roundIndex + 1} / ${session.totalRounds}',
-                                style: Theme.of(context).textTheme.titleMedium,
+                                'Ronda ${session.roundIndex + 1} de ${session.totalRounds}',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 4),
                               Text(
                                 'Tentativas: ${round.attemptsLeft}   •   Score: ${session.score}',
+                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               EcoMeter(
                                 attemptsLeft: round.attemptsLeft,
                                 maxAttempts: round.difficulty.maxAttempts,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
+                              if (isPlaying) ...[
+                                RoundProgressBar(
+                                  startedAtMs: round.startedAtMs,
+                                  targetSeconds: round.difficulty.targetSeconds,
+                                  pausedAccumulatedMs: round.pausedAccumulatedMs,
+                                  pausedAtMs: round.pausedAtMs,
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              Text(
+                                "Descrição:", 
+                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
                               Text(
                                 round.challenge.description,
-                                style: Theme.of(context).textTheme.bodyLarge,
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                               const SizedBox(height: 12),
                             ],
@@ -274,7 +298,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
 
                               if (isPlaying) ...[
                                 Expanded(
@@ -283,59 +307,79 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                                     onTap: controller.guess,
                                   ),
                                 ),
-                              ] else ...[
-                                // Painel de fim de ronda / jogo
+                              ] else if (isRoundEnd) ...[
                                 Expanded(
                                   child: Center(
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 420,
-                                      ),
-                                      child: Card(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                round.status == RoundStatus.won
-                                                    ? 'Acertaste!'
-                                                    : 'Falhaste!',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleLarge,
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'A palavra era: ${round.challenge.word}',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleMedium,
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              const SizedBox(height: 12),
-                                              SizedBox(
-                                                width: double.infinity,
-                                                child: ElevatedButton(
-                                                  onPressed: () async {
-                                                    await controller
-                                                        .nextRound();
-                                                  },
-                                                  child: Text(
-                                                    isGameOver
-                                                        ? 'Ver resultado'
-                                                        : 'Próxima ronda',
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                    child: GameOverlayCard(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            round.status == RoundStatus.won
+                                                ? 'Acertaste!'
+                                                : 'Falhaste!',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(color: 
+                                                  round.status == RoundStatus.won 
+                                                    ? Colors.green[600] : Colors.red[400], fontWeight: FontWeight.bold),
+                                            textAlign: TextAlign.center,
                                           ),
-                                        ),
+                                          const SizedBox(height: 4),
+                                          if (round.status == RoundStatus.lost)
+                                          Text(
+                                            'A palavra era: ${round.challenge.word}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color: Colors.black87,
+                                                ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          if (breakdown != null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Pontos Base: ${breakdown.basePoints}',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                            Text(
+                                              'Bónus de Tempo: ${breakdown.timeBonus}',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                            Text(
+                                              'Bónus de Tentativas: ${breakdown.attemptsBonus}',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'Total de Pontos da Ronda: ${breakdown.total}',
+                                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(height: 10),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton.icon(
+                                              onPressed: () async {
+                                                await controller.nextRound();
+                                              },
+                                              icon: const Icon(Icons.arrow_forward),
+                                              label: const Text(
+                                                'Próxima Ronda',
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 ),
+                              ] else ...[
+                                const Spacer(),
                               ],
                             ],
                           ),
@@ -345,28 +389,102 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                   ),
                 ),
               ),
-              SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+              if (isGameOver) ...[
+                Positioned.fill(
+                  child: Container(color: Colors.black.withAlpha(71)),
                 ),
-                child: IconButton(
-                  iconSize: 28,
-                  icon: const Icon(Icons.pause, color: Colors.white),
-                  onPressed: _openMenu,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black54,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                SafeArea(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      child: GameOverlayCard(
+                        backgroundColor: Colors.white.withAlpha(255),
+                        maxWidth: 500,
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Fim de Jogo',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Pontuação: ${session.score}',
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Palavras Correctas: ${session.correctCount}/${session.totalRounds}',
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  controller.startGame(_selectedDifficulty);
+                                },
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Jogar Novamente'),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                label: const Text('Voltar ao Hub'),
+                                icon: const Icon(Icons.arrow_back),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
+              ],
+              if (!isGameOver) 
+              // Botão de menu, exceto no ecrã de fim de jogo (porque já tem opções)
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      child: IconButton(
+                        iconSize: 28,
+                        icon: const Icon(Icons.pause, color: Colors.white),
+                        onPressed: _openMenu,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black54,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -532,7 +650,6 @@ class EcoMeter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = attemptsLeft / maxAttempts;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

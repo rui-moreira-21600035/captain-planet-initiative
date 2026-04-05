@@ -9,13 +9,19 @@ import 'package:flutter/services.dart';
 
 import '../game/eco_sort_flame_game.dart';
 
+enum EcoSortMenuAction { resume, restart, exit }
+
 extension BinTypeLabels on BinType {
   String labelPt() {
     switch (this) {
-      case BinType.blue: return 'azul';
-      case BinType.green: return 'verde';
-      case BinType.yellow: return 'amarelo';
-      case BinType.brown: return 'castanho';
+      case BinType.blue:
+        return 'azul';
+      case BinType.green:
+        return 'verde';
+      case BinType.yellow:
+        return 'amarelo';
+      case BinType.brown:
+        return 'castanho';
     }
   }
 }
@@ -23,34 +29,18 @@ extension BinTypeLabels on BinType {
 class EcoSortPage extends StatefulWidget {
   final ScoreRepository scoreRepo;
 
-  const EcoSortPage({
-    super.key,
-    required this.scoreRepo,
-  });
+  const EcoSortPage({super.key, required this.scoreRepo});
 
   @override
   State<EcoSortPage> createState() => _EcoSortPageState();
 }
 
 class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
-  late final EcoSortFlameGame _game;
+  late EcoSortFlameGame _game;
 
   bool _saved = false;
 
   StreamSubscription<EcoSortFeedback>? _feedbackSub;
-
-  String _binNamePt(BinType t) {
-  switch (t) {
-    case BinType.blue:
-      return 'azul';
-    case BinType.green:
-      return 'verde';
-    case BinType.yellow:
-      return 'amarelo';
-    case BinType.brown:
-      return 'castanho';
-  }
-}
 
   @override
   void initState() {
@@ -59,7 +49,13 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _lockLandscape();
 
-    _game = EcoSortFlameGame(); // já sem onGameOver
+    _createNewGame();
+  }
+
+  void _createNewGame() {
+    _feedbackSub?.cancel();
+
+    _game = EcoSortFlameGame();
 
     _feedbackSub = _game.feedbackStream.listen((fb) {
       if (!mounted) return;
@@ -80,6 +76,66 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
           ),
         );
     });
+  }
+
+  Future<void> _openMenu() async {
+    _game.pauseEngine();
+
+    while (mounted) {
+      final action = await showGameMenuDialog<EcoSortMenuAction>(
+        context: context,
+        title: 'ECO SORT - MENU',
+        icon: const Icon(
+          Icons.delete_outline,
+          size: 42,
+          color: Color.fromARGB(255, 128, 174, 121),
+        ),
+        items: const [
+          GameMenuItem(label: 'Retomar Jogo', value: EcoSortMenuAction.resume , icon: Icon(Icons.play_arrow)),
+          GameMenuItem(
+            label: 'Reiniciar Jogo',
+            value: EcoSortMenuAction.restart,
+            icon: Icon(Icons.refresh),
+          ),
+          GameMenuItem(
+            label: 'Sair do Jogo',
+            value: EcoSortMenuAction.exit,
+            isDestructive: true,
+            icon: Icon(Icons.exit_to_app),
+
+          ),
+        ],
+      );
+
+      if (!mounted) return;
+
+      switch (action) {
+        case null:
+        case EcoSortMenuAction.resume:
+          _game.resumeEngine();
+          return;
+
+        case EcoSortMenuAction.restart:
+          setState(() {
+            _saved = false;
+            _createNewGame();
+          });
+          return;
+
+        case EcoSortMenuAction.exit:
+          final confirmed = await showConfirmExitDialog(context);
+          if (!mounted) return;
+
+          if (confirmed) {
+            await _trySave(EndReason.backToHub);
+            if (mounted) Navigator.of(context).pop();
+            return;
+          }
+
+          // Cancelou saída -> volta ao menu
+          continue;
+      }
+    }
   }
 
   // --- LIFECYCLE: quando a app vai para background / detached ---
@@ -175,14 +231,36 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        // O utilizador voltou ao hub (ou tentou)
-        _trySave(EndReason.backToHub);
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _openMenu();
       },
       child: Scaffold(
-        body: GameWidget(
-          game: _game,
+        body: Stack(
+          children: [
+            GameWidget(game: _game),
+
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: IconButton(
+                    iconSize: 28,
+                    icon: const Icon(Icons.pause, color: Colors.white),
+                    onPressed: _openMenu,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black54,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

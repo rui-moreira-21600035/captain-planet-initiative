@@ -3,9 +3,5 @@ class EcoFact {
   final String text;
   final String theme;
 
-  const EcoFact({
-    required this.id,
-    required this.text,
-    required this.theme,
-  });
+  const EcoFact({required this.id, required this.text, required this.theme});
 }

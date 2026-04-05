@@ -15,6 +15,7 @@ class LocalScoreRepositorySqflite implements ScoreRepository {
   })  : _db = db ?? ScoresDb(),
         _uuid = uuid ?? const Uuid();
 
+  @override
   ScoreEntry newEntry({
     required String gameId,
     required int score,
