@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class GameOverlayCard extends StatelessWidget {
   final Widget child;
   final double maxWidth;
+  final double maxHeight;
   final EdgeInsetsGeometry padding;
   final BorderRadius? borderRadius;
   final Color? backgroundColor;
@@ -13,6 +14,7 @@ class GameOverlayCard extends StatelessWidget {
     super.key,
     required this.child,
     this.maxWidth = 420,
+    this.maxHeight = 600,
     this.padding = const EdgeInsets.all(20),
     this.borderRadius,
     this.backgroundColor,
@@ -32,7 +34,7 @@ class GameOverlayCard extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
         child: Card(
           elevation: 6,
           color: bg,

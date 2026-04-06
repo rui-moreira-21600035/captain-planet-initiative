@@ -119,6 +119,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  eco_proto_game:
+    dependency: "direct main"
+    description:
+      path: "../../packages/eco_proto_game"
+      relative: true
+    source: path
+    version: "0.1.0"
   eco_sort_game:
     dependency: "direct main"
     description:

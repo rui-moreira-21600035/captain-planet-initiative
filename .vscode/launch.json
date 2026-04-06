@@ -21,7 +21,7 @@
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
-            "deviceId": "192.168.1.183:41335",
+            "deviceId": "192.168.1.163:40213",
             "toolArgs": ["--verbose"]
         },
         {

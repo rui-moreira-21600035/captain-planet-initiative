@@ -37,6 +37,8 @@ dependencies:
     path: ../../packages/eco_sort_game
   eco_guess_game:
     path: ../../packages/eco_guess_game
+  eco_proto_game:
+    path: ../../packages/eco_proto_game
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

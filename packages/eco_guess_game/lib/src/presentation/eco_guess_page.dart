@@ -289,10 +289,13 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               const SizedBox(height: 6),
+                              // Palavra mascarada
                               Text(
                                 masked,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.headlineSmall
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       letterSpacing: 2,
                                       fontWeight: FontWeight.bold,
@@ -311,6 +314,8 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                                 Expanded(
                                   child: Center(
                                     child: GameOverlayCard(
+                                      maxWidth: 500,
+                                      maxHeight: MediaQuery.of(context).size.height * 0.8,
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -320,7 +325,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                                                 : 'Falhaste!',
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .titleLarge
+                                                .titleMedium
                                                 ?.copyWith(color: 
                                                   round.status == RoundStatus.won 
                                                     ? Colors.green[600] : Colors.red[400], fontWeight: FontWeight.bold),
@@ -339,28 +344,28 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
                                             textAlign: TextAlign.center,
                                           ),
                                           if (breakdown != null) ...[
-                                            const SizedBox(height: 4),
+                                            const SizedBox(height: 8),
                                             Text(
                                               'Pontos Base: ${breakdown.basePoints}',
-                                              style: Theme.of(context).textTheme.bodyMedium,
+                                              style: Theme.of(context).textTheme.bodySmall,
                                             ),
                                             Text(
                                               'Bónus de Tempo: ${breakdown.timeBonus}',
-                                              style: Theme.of(context).textTheme.bodyMedium,
+                                              style: Theme.of(context).textTheme.bodySmall,
                                             ),
                                             Text(
                                               'Bónus de Tentativas: ${breakdown.attemptsBonus}',
-                                              style: Theme.of(context).textTheme.bodyMedium,
+                                              style: Theme.of(context).textTheme.bodySmall,
                                             ),
-                                            const SizedBox(height: 6),
+                                            const SizedBox(height: 8),
                                             Text(
                                               'Total de Pontos da Ronda: ${breakdown.total}',
-                                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ],
-                                          const SizedBox(height: 10),
+                                          const SizedBox(height: 4),
                                           SizedBox(
                                             width: double.infinity,
                                             child: ElevatedButton.icon(
