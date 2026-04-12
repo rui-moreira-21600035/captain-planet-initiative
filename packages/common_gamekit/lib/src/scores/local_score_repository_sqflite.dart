@@ -29,7 +29,7 @@ class LocalScoreRepositorySqflite implements ScoreRepository {
       durationMs: durationMs,
       metricsJson: metricsJson,
       createdAtMs: DateTime.now().millisecondsSinceEpoch,
-      synced: false,
+      syncedAt: null,
     );
   }
 
@@ -45,7 +45,7 @@ class LocalScoreRepositorySqflite implements ScoreRepository {
         'metrics_json': entry.metricsJson,
         'duration_ms': entry.durationMs,
         'created_at_ms': entry.createdAtMs,
-        'synced': entry.synced ? 1 : 0,
+        'synced': null,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -84,6 +84,6 @@ class LocalScoreRepositorySqflite implements ScoreRepository {
         metricsJson: r['metrics_json'] as String,
         createdAtMs: (r['created_at_ms'] as int),
         durationMs: (r['duration_ms'] as int),
-        synced: (r['synced'] as int) == 1,
+        syncedAt: (r['synced_at'] as DateTime),
       );
 }

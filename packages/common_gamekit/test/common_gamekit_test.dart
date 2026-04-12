@@ -111,7 +111,7 @@ void main() {
       expect(e.score, 42);
       expect(e.metricsJson, contains('correct'));
       expect(e.durationMs, 10000);
-      expect(e.synced, isFalse);
+      expect(e.syncedAt, isFalse);
 
       // createdAtMs dentro de uma janela razoável
       expect(e.createdAtMs, inInclusiveRange(before, after));
@@ -126,7 +126,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 1000,
         createdAtMs: 100,
-        synced: false,
+        syncedAt: null,
       ));
       await repo.save(ScoreEntry(
         id: 'a2',
@@ -135,7 +135,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 2000,
         createdAtMs: 200,
-        synced: false,
+        syncedAt: null,
       ));
       await repo.save(ScoreEntry(
         id: 'a3',
@@ -144,7 +144,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 3000,
         createdAtMs: 300,
-        synced: true,
+        syncedAt: null,
       ));
 
       // game B (não deve aparecer)
@@ -155,7 +155,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 999,
         createdAtMs: 999,
-        synced: false,
+        syncedAt: null,
       ));
 
       final top = await repo.topScores(gameId: 'eco_sort', limit: 10);
@@ -171,7 +171,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 1000,
         createdAtMs: 100,
-        synced: false,
+        syncedAt: null,
       ));
       await repo.save(ScoreEntry(
         id: 'r2',
@@ -180,7 +180,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 1000,
         createdAtMs: 500,
-        synced: false,
+        syncedAt: null,
       ));
       await repo.save(ScoreEntry(
         id: 'r3',
@@ -189,7 +189,7 @@ void main() {
         metricsJson: '{}',
         durationMs: 1000,
         createdAtMs: 300,
-        synced: false,
+        syncedAt: null,
       ));
 
       final recent = await repo.recentScores(gameId: 'eco_sort', limit: 10);
@@ -204,7 +204,7 @@ void main() {
         metricsJson: '{"v":1}',
         durationMs: 1000,
         createdAtMs: 100,
-        synced: false,
+        syncedAt: null,
       ));
 
       await repo.save(ScoreEntry(
@@ -214,7 +214,7 @@ void main() {
         metricsJson: '{"v":2}',
         durationMs: 2000,
         createdAtMs: 200,
-        synced: true,
+        syncedAt: null,
       ));
 
       final top = await repo.topScores(gameId: 'eco_sort', limit: 10);
@@ -224,7 +224,7 @@ void main() {
       expect(top.first.metricsJson, contains('"v":2'));
       expect(top.first.durationMs, 2000);
       expect(top.first.createdAtMs, 200);
-      expect(top.first.synced, isTrue);
+      expect(top.first.syncedAt, isTrue);
     });
 
     test('topScores respeita limit', () async {
@@ -236,7 +236,7 @@ void main() {
           metricsJson: '{}',
           durationMs: 1000,
           createdAtMs: i,
-          synced: false,
+          syncedAt: null,
         ));
       }
 

@@ -5,7 +5,7 @@ class ScoreEntry {
   final String metricsJson; // JSON string
   final int durationMs;     // tempo total em ms
   final int createdAtMs;    // epoch ms
-  final bool synced;        // preparado para backend
+  final DateTime? syncedAt;        // null = não sincronizado, DateTime = quando foi sincronizado
 
   const ScoreEntry({
     required this.id,
@@ -14,6 +14,6 @@ class ScoreEntry {
     required this.metricsJson,
     required this.durationMs,
     required this.createdAtMs,
-    required this.synced,
+    required this.syncedAt,
   });
 }

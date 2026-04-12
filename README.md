@@ -1,5 +1,7 @@
 # Captain Planet Initiative
 
+Demonstration video: [Demo Captain Planet - TFC - Entrega Intercalar 2](https://youtu.be/OTToY88koIw)
+
 Captain Planet Initiative is a Flutter monorepo for an educational minigames platform.
 It includes:
 
@@ -7,19 +9,27 @@ It includes:
 - `common_gamekit`: shared contracts and score persistence layer.
 - `eco_sort_game`: Eco Sort game module (Flame-based).
 - `eco_guess_game`: Eco Guess game module (hangman-style word guess with eco challenge content).
+- `eco_proto_game`: Eco Proto game module (Easter egg prototype mini-game, Flame-based).
 
 ## Current Games
 
 - **Eco Sort** (`id: eco_sort`)
-  - Goal: place each waste item in the correct recycling container.
+  - Goal: Place each waste item in the correct recycling container.
+  - Flame-based game engine integration.
   - Hub integration via `GameModule` registry.
   - Session results persisted locally via `sqflite`.
 
 - **Eco Guess** (`id: eco_guess`)
-  - Goal: guess the hidden word related to eco-challenges.
+  - Goal: Guess the hidden word related to eco-challenges.
   - Interactive UI with hints, difficulty levels, and limited lives.
   - Hub integration via `GameModule` registry.
   - Session results also persisted via `sqflite`.
+
+- **Eco Proto** (`id: eco_proto`)
+  - Goal: Easter egg prototype mini-game for testing and experimentation.
+  - Flame-based game engine integration.
+  - Hub integration via `GameModule` registry.
+  - Session results persisted locally via `sqflite`.
 
 ## Repository Structure
 
@@ -30,7 +40,8 @@ It includes:
 ├── packages/
 │   ├── common_gamekit/          # Shared interfaces and score repository
 │   ├── eco_sort_game/           # Eco Sort game package
-│   └── eco_guess_game/          # Eco Guess game package
+│   ├── eco_guess_game/          # Eco Guess game package
+│   └── eco_proto_game/          # Eco Proto game package
 └── tools/
     ├── generate_eco_sort_catalog.py
     └── sanitize_assets.py
@@ -44,21 +55,20 @@ It includes:
 
 ## Quick Start
 
-Clone and enter the repository:
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/rui-moreira-21600035/captain-planet-initiative.git
-cd captain_planet_initiative
 ```
 
-Fetch dependencies:
+2. Fetch dependencies:
 
 ```bash
 cd apps/hub_app
 flutter pub get
 ```
 
-Run the hub app:
+3. Run the Hub App (Inside the `apps/hub_app` directory):
 
 ```bash
 flutter run
@@ -71,6 +81,8 @@ Run tests per package/app:
 ```bash
 cd apps/hub_app && flutter test
 cd ../../packages/common_gamekit && flutter test
+cd ../eco_guess_game && flutter test
+cd ../eco_proto_game && flutter test
 cd ../eco_sort_game && flutter test
 ```
 
@@ -98,6 +110,14 @@ python3 tools/sanitize_assets.py
 python3 tools/generate_eco_sort_catalog.py
 ```
 
+## Hub App Features
+
+The hub app now features a 3-tab navigation architecture:
+
+- **Games Tab**: Lists available games (launcher functionality).
+- **Scores Tab**: Local leaderboard and future API-based global rankings.
+- **Settings Tab**: Sound and appearance preferences.
+
 ## Architecture Notes
 
 - Game modules are registered in:
@@ -107,6 +127,7 @@ python3 tools/generate_eco_sort_catalog.py
 - Game packages entrypoint:
   - `packages/eco_sort_game/lib/eco_sort_game.dart`
   - `packages/eco_guess_game/lib/eco_guess_game.dart`
+  - `packages/eco_proto_game/lib/eco_proto_game.dart`
 
 ## Roadmap
 

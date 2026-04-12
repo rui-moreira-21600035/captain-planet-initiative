@@ -222,7 +222,7 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
         durationMs: result.durationMs,
         metricsJson: metricsJson,
         createdAtMs: DateTime.now().millisecondsSinceEpoch,
-        synced: false,
+        syncedAt: null,
       );
       await repo.save(entry);
     }

@@ -79,10 +79,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     // Repõe orientações normais (ou as que o hub quer)
-    SystemChrome.setPreferredOrientations(const [
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
 
     super.dispose();
   }
