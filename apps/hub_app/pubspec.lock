@@ -125,7 +125,7 @@ packages:
       path: "../../packages/eco_proto_game"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.0.1"
   eco_sort_game:
     dependency: "direct main"
     description:
@@ -178,6 +178,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_plugin_android_lifecycle:
+    dependency: transitive
+    description:
+      name: flutter_plugin_android_lifecycle
+      sha256: "38d1c268de9097ff59cf0e844ac38759fc78f76836d37edad06fa21e182055a0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.34"
   flutter_riverpod:
     dependency: "direct main"
     description:
@@ -428,6 +436,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  sound_effect:
+    dependency: transitive
+    description:
+      name: sound_effect
+      sha256: "9641f586e0249d39a17097627b53955dfa4ebf0dcc3b503e904f01242df6379d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.3"
   source_map_stack_trace:
     dependency: transitive
     description:
@@ -646,4 +662,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.10.1 <4.0.0"
-  flutter: ">=3.32.0"
+  flutter: ">=3.35.0"

@@ -7,6 +7,8 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+import 'package:sound_effect/sound_effect.dart';
 
 import '../data/catalog/catalog_loader.dart';
 import '../domain/bin_type.dart';
@@ -17,9 +19,9 @@ import 'controllers/round_controller.dart';
 import 'controllers/scoring_controller.dart';
 import 'components/eco_sort_hud_component.dart';
 
-enum GameLoadState { booting, loading, ready, error }
+enum GameLoadState { booting, loading, ready, finished, error }
 
-enum EndReason { backToHub, appPaused, appDetached }
+enum EndReason { completed, backToHub, appPaused, appDetached }
 
 class EcoSortGameResult {
   final int score;
@@ -66,9 +68,12 @@ class EcoSortFlameGame extends FlameGame {
 
   GameLoadState _state = GameLoadState.booting;
 
+  final _soundEffectPlugin = SoundEffect();
+
   late final CatalogLoader _catalogLoader;
   late final ScoringController _scoring;
   late RoundController _rounds;
+  static const int maxRoundsPerSession = 10;
 
   List<WasteItem> _items = const [];
   final Map<BinType, BinComponent> _binComps = {};
@@ -96,6 +101,9 @@ class EcoSortFlameGame extends FlameGame {
   final StreamController<EcoSortFeedback> _feedbackCtrl = StreamController<EcoSortFeedback>.broadcast();
   Stream<EcoSortFeedback> get feedbackStream => _feedbackCtrl.stream;
 
+  final StreamController<EcoSortGameResult> _resultCtrl = StreamController<EcoSortGameResult>.broadcast();
+  Stream<EcoSortGameResult> get resultStream => _resultCtrl.stream;
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -107,6 +115,8 @@ class EcoSortFlameGame extends FlameGame {
 
     // Define o prefixo para os assets no Flame Images
     //images.prefix = _pkg + images.prefix;
+    await _soundEffectPlugin.initialize(maxStreams:4);
+    loadSounds();
 
     camera = CameraComponent.withFixedResolution(
       width: logicalResolution.x,
@@ -132,7 +142,10 @@ class EcoSortFlameGame extends FlameGame {
 
   @override
   void onRemove() {
+    _roundTimerComp.timer.stop();
     _feedbackCtrl.close();
+    _resultCtrl.close();
+    releaseSounds();
     super.onRemove();
   }
 
@@ -144,7 +157,11 @@ class EcoSortFlameGame extends FlameGame {
 
     // countdown
     _timeLeft = (_timeLeft - dt).clamp(0.0, roundSeconds);
+    if(_timeLeft.toStringAsFixed(2) == "3.00") {
+      _soundEffectPlugin.play('clock_tick_tock_3secs', volume: 0.5);
+    }
     _timerText?.text = 'Tempo: ${_timeLeft.ceil()}';
+    Logger().d('Time left: ${_timeLeft.toStringAsFixed(2)}s');
   }
 
   void _buildBootScene() {
@@ -193,6 +210,7 @@ class EcoSortFlameGame extends FlameGame {
 
         // Hint do contentor correcto
         _binComps[current.bin]?.playHintCorrect();
+        _soundEffectPlugin.play('wrong', volume: 0.5);
 
         // feedback para UI
         _feedbackCtrl.add(EcoSortFeedback(
@@ -451,10 +469,12 @@ class EcoSortFlameGame extends FlameGame {
     if (isCorrect) {
       _scoring.registerCorrect();
       _binComps[chosen]?.playCorrect();
+      _soundEffectPlugin.play('correct_2', volume: 0.3);
     } else {
       _scoring.registerWrong();
       _binComps[chosen]?.playWrong();
-      _binComps[expected]?.playHintCorrect(); // 👈 mostra o correcto
+      _soundEffectPlugin.play('wrong', volume: 0.5);
+      _binComps[expected]?.playHintCorrect(); // mostra o contentor correcto
     }
 
     // Envia feedback para a UI (snackbar)
@@ -481,6 +501,11 @@ class EcoSortFlameGame extends FlameGame {
   void _nextRound() {
     if (_state != GameLoadState.ready) return;
 
+    if (_rounds.totalRoundsPlayed >= maxRoundsPerSession) {
+      _endGame(EndReason.completed);
+      return;
+    }
+
     WasteItem next;
     if (_items.length == 1) {
       next = _items.first;
@@ -493,13 +518,29 @@ class EcoSortFlameGame extends FlameGame {
     _lastItem = next;
 
     final sprite = _itemSprites[next.id];
-    if (sprite == null) throw StateError('Sprite não encontrado para ${next.id}');
+    if (sprite == null) {
+      throw StateError('Sprite não encontrado para ${next.id}');
+    }
 
     _waste.setItem(next, sprite);
     _fitWasteIntoFrame(_wasteFrameSize);
 
     // (Opcional) se queres que também reinicie aqui:
     _resetRoundTimer();
+  }
+
+  void _endGame(EndReason reason) {
+    if (_state == GameLoadState.finished) return;
+
+    _state = GameLoadState.finished;
+    _inputLocked = true;
+    _roundTimerComp.timer.stop();
+
+    final result = buildResult(reason);
+
+    if (!_resultCtrl.isClosed) {
+      _resultCtrl.add(result);
+    }
   }
 
   void _resetRoundTimer() {
@@ -519,6 +560,22 @@ class EcoSortFlameGame extends FlameGame {
       totalRoundsPlayed: _rounds.totalRoundsPlayed,
       reason: reason,
     );
+  }
+
+  Future<void> loadSounds() async {
+    try {
+      await _soundEffectPlugin.load('correct', '${_pkg}assets/audio/correct.mp3');
+      await _soundEffectPlugin.load('correct_2', '${_pkg}assets/audio/correct_2.mp3');
+      await _soundEffectPlugin.load('wrong', '${_pkg}assets/audio/wrong.mp3');
+      await _soundEffectPlugin.load('clock_tick_tock', '${_pkg}assets/audio/clock_tick_tock.mp3');
+      await _soundEffectPlugin.load('clock_tick_tock_3secs', '${_pkg}assets/audio/clock_tick_tock_3secs.mp3');
+    } catch (e) {
+      Logger().e('Erro ao carregar sons: $e'); // loga o erro, mas não impede o jogo de funcionar
+    }
+  }
+
+  Future<void> releaseSounds() async {
+    await _soundEffectPlugin.release();
   }
 
   void restart() {

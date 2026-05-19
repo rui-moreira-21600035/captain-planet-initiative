@@ -41,6 +41,7 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
   bool _saved = false;
 
   StreamSubscription<EcoSortFeedback>? _feedbackSub;
+  StreamSubscription<EcoSortGameResult>? _resultSub;
 
   @override
   void initState() {
@@ -54,6 +55,7 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
 
   void _createNewGame() {
     _feedbackSub?.cancel();
+    _resultSub?.cancel();
 
     _game = EcoSortFlameGame();
 
@@ -75,6 +77,12 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
             margin: const EdgeInsets.only(bottom: 24, left: 250, right: 250),
           ),
         );
+    });
+
+    _resultSub = _game.resultStream.listen((result){
+      if (!mounted) return;
+
+      Navigator.of(context).pop(result);
     });
   }
 
@@ -155,6 +163,7 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
     _trySave(EndReason.backToHub); // fallback (se não apanhou PopScope/paused)
     _restoreOrientation();
     _feedbackSub?.cancel();
+    _resultSub?.cancel();
     super.dispose();
   }
 

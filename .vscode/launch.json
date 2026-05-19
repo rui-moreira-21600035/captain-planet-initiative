@@ -21,7 +21,8 @@
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
-            "deviceId": "192.168.1.163:40213",
+            "deviceId": "192.168.1.218:42065",
+            "flutterMode": "debug",
             "toolArgs": ["--verbose"]
         },
         {
