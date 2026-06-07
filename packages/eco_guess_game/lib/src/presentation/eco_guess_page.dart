@@ -12,8 +12,6 @@ import 'package:eco_guess_game/src/presentation/widgets/round_progress_bar.dart'
 
 import 'package:common_gamekit/common_gamekit.dart';
 
-enum EcoGuessMenuAction { resume, restart, exit }
-
 class EcoGuessPage extends ConsumerStatefulWidget {
   final ScoreRepository scoreRepo;
   final GameDifficulty? difficulty;
@@ -93,23 +91,23 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
     ref.read(ecoGuessControllerProvider.notifier).pauseRoundTimer();
 
     while (mounted) {
-      final action = await showGameMenuDialog<EcoGuessMenuAction>(
+      final action = await showGameMenuDialog<GameMenuAction>(
         context: context,
         title: 'ECO GUESS - MENU',
         headerBadge: DifficultyBadge(
           difficulty: _selectedDifficulty,
         ),
         items: const [
-          GameMenuItem(label: 'Retomar Jogo', value: EcoGuessMenuAction.resume, icon: Icon(Icons.play_arrow)),
+          GameMenuItem(label: 'Retomar Jogo', value: GameMenuAction.resume, icon: Icon(Icons.play_arrow)),
           GameMenuItem(
             label: 'Reiniciar Jogo',
-            value: EcoGuessMenuAction.restart,
+            value: GameMenuAction.restart,
             icon: Icon(Icons.refresh),
 
           ),
           GameMenuItem(
             label: 'Sair do Jogo',
-            value: EcoGuessMenuAction.exit,
+            value: GameMenuAction.exit,
             isDestructive: true,
             icon: Icon(Icons.exit_to_app),
 
@@ -121,11 +119,11 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
 
       switch (action) {
         case null:
-        case EcoGuessMenuAction.resume:
+        case GameMenuAction.resume:
           ref.read(ecoGuessControllerProvider.notifier).resumeRoundTimer();
           return;
 
-        case EcoGuessMenuAction.restart:
+        case GameMenuAction.restart:
           final restarted = await _pickDifficultyAndStart();
           if (!mounted) return;
 
@@ -136,7 +134,7 @@ class _EcoGuessPageState extends ConsumerState<EcoGuessPage> {
           // cancelou a escolha de dificuldade -> volta ao menu
           continue;
 
-        case EcoGuessMenuAction.exit:
+        case GameMenuAction.exit:
           final confirmed = await showConfirmExitDialog(context);
           if (!mounted) return;
 

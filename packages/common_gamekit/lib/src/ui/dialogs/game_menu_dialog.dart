@@ -27,7 +27,7 @@ Future<T?> showGameMenuDialog<T>({
     barrierDismissible: true,
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 180),
-    pageBuilder: (_, __, ___) => Center(
+    pageBuilder: (_, _, _) => Center(
       child: _GameMenuDialogBody<T>(title: title, icon: icon, headerBadge: headerBadge, items: items),
     ),
     transitionBuilder: (_, anim, __, child) {

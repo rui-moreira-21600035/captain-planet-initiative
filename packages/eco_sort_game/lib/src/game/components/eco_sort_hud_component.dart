@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
 
-import '../controllers/scoring_controller.dart';
+import 'package:eco_sort_game/src/game/controllers/scoring_controller.dart';
 
 class EcoSortHudComponent extends PositionComponent {
   final ScoringController scoring;

@@ -64,8 +64,8 @@ void main() {
 
   test('RoundController.reset reinicia contador e estado', () {
   final items = [
-    WasteItem(id: 'a', label: 'A', bin: BinType.blue, asset: 'x'),
-    WasteItem(id: 'b', label: 'B', bin: BinType.green, asset: 'y'),
+    WasteItem(id: 'a', labelPt: 'A', labelEn: 'A', bin: BinType.blue, asset: 'x'),
+    WasteItem(id: 'b', labelPt: 'B', labelEn: 'B', bin: BinType.green, asset: 'y'),
   ];
 
   final r = RoundController(items);
@@ -82,7 +82,7 @@ void main() {
 
   test('round controller loops and counts', () {
     final items = [
-      WasteItem(id: 'a', label: 'A', bin: BinType.blue, asset: 'x'),
+      WasteItem(id: 'a', labelPt: 'A', labelEn: 'A', bin: BinType.blue, asset: 'x'),
     ];
     final r = RoundController(items);
     final first = r.nextOrLoop();
@@ -100,14 +100,14 @@ void main() {
       {
         "version": 1,
         "bins": [
-          {"id":"blue","label":"Azul","asset":"assets/images/containers/blue.png"},
-          {"id":"green","label":"Verde","asset":"assets/images/containers/green.png"},
-          {"id":"yellow","label":"Amarelo","asset":"assets/images/containers/yellow.png"},
-          {"id":"brown","label":"Castanho","asset":"assets/images/containers/brown.png"}
+          {"id":"blue","label_pt":"Azul","label_en":"Blue","asset":"assets/images/containers/blue.png"},
+          {"id":"green","label_pt":"Verde","label_en":"Green","asset":"assets/images/containers/green.png"},
+          {"id":"yellow","label_pt":"Amarelo","label_en":"Yellow","asset":"assets/images/containers/yellow.png"},
+          {"id":"brown","label_pt":"Castanho","label_en":"Brown","asset":"assets/images/containers/brown.png"}
         ],
         "items": [
-          {"id":"apple_core","label":"Miolo","bin":"brown","asset":"assets/images/waste_items/brown/apple_core.png"},
-          {"id":"bottle","label":"Garrafa","bin":"green","asset":"assets/images/waste_items/green/bottle.png","scaleBias":0.9}
+          {"id":"apple_core","label_pt":"Miolo","label_en":"Core","bin":"brown","asset":"assets/images/waste_items/brown/apple_core.png"},
+          {"id":"bottle","label_pt":"Garrafa","label_en":"Bottle","bin":"green","asset":"assets/images/waste_items/green/bottle.png","scaleBias":0.9}
         ]
       }
       ''';
@@ -123,10 +123,10 @@ void main() {
       {
         "version": 1,
         "bins": [
-          {"id":"blu","label":"Azul","asset":"assets/images/containers/blue.png"}
+          {"id":"blu","label_pt":"Azul","label_en":"Blue","asset":"assets/images/containers/blue.png"}
         ],
         "items": [
-          {"id":"x","label":"X","bin":"blu","asset":"assets/images/waste_items/x.png"}
+          {"id":"x","label_pt":"X","label_en":"X","bin":"blu","asset":"assets/images/waste_items/x.png"}
         ]
       }
       ''';
@@ -142,14 +142,14 @@ void main() {
       {
         "version": 1,
         "bins": [
-          {"id":"blue","label":"Azul","asset":"assets/images/containers/blue.png"},
-          {"id":"green","label":"Verde","asset":"assets/images/containers/green.png"},
-          {"id":"yellow","label":"Amarelo","asset":"assets/images/containers/yellow.png"},
-          {"id":"brown","label":"Castanho","asset":"assets/images/containers/brown.png"}
+          {"id":"blue","label_pt":"Azul","label_en":"Blue","asset":"assets/images/containers/blue.png"},
+          {"id":"green","label_pt":"Verde","label_en":"Green","asset":"assets/images/containers/green.png"},
+          {"id":"yellow","label_pt":"Amarelo","label_en":"Yellow","asset":"assets/images/containers/yellow.png"},
+          {"id":"brown","label_pt":"Castanho","label_en":"Brown","asset":"assets/images/containers/brown.png"}
         ],
         "items": [
-          {"id":"dup","label":"A","bin":"blue","asset":"assets/images/waste_items/a.png"},
-          {"id":"dup","label":"B","bin":"green","asset":"assets/images/waste_items/b.png"}
+          {"id":"dup","label_pt":"A","label_en":"A","bin":"blue","asset":"assets/images/waste_items/a.png"},
+          {"id":"dup","label_pt":"B","label_en":"B","bin":"green","asset":"assets/images/waste_items/b.png"}
         ]
       }
       ''';
@@ -165,13 +165,13 @@ void main() {
       {
         "version": 1,
         "bins": [
-          {"id":"blue","label":"Azul","asset":"assets/images/containers/blue.png"},
-          {"id":"green","label":"Verde","asset":"assets/images/containers/green.png"},
-          {"id":"yellow","label":"Amarelo","asset":"assets/images/containers/yellow.png"},
-          {"id":"brown","label":"Castanho","asset":"assets/images/containers/brown.png"}
+          {"id":"blue","label_pt":"Azul","label_en":"Blue","asset":"assets/images/containers/blue.png"},
+          {"id":"green","label_pt":"Verde","label_en":"Green","asset":"assets/images/containers/green.png"},
+          {"id":"yellow","label_pt":"Amarelo","label_en":"Yellow","asset":"assets/images/containers/yellow.png"},
+          {"id":"brown","label_pt":"Castanho","label_en":"Brown","asset":"assets/images/containers/brown.png"}
         ],
         "items": [
-          {"id":"x","label":"X","bin":"purple","asset":"assets/images/waste_items/x.png"}
+          {"id":"x","label_pt":"X","label_en":"X","bin":"purple","asset":"assets/images/waste_items/x.png"}
         ]
       }
       ''';

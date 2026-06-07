@@ -3,13 +3,14 @@ import 'dart:convert';
 
 import 'package:common_gamekit/common_gamekit.dart';
 import 'package:eco_sort_game/src/domain/bin_type.dart';
+import 'package:eco_sort_game/src/domain/ecosort_game_result.dart';
+import 'package:eco_sort_game/src/domain/ecosort_feedback.dart';
+import 'package:eco_sort_game/src/game/components/eco_sort_result_dialog.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../game/eco_sort_flame_game.dart';
-
-enum EcoSortMenuAction { resume, restart, exit }
 
 extension BinTypeLabels on BinType {
   String labelPt() {
@@ -79,35 +80,34 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
         );
     });
 
-    _resultSub = _game.resultStream.listen((result){
+    _resultSub = _game.resultStream.listen((result) async {
       if (!mounted) return;
 
-      Navigator.of(context).pop(result);
-    });
-  }
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => EcoSortResultDialog(result: result),
+      );
 
-  Future<void> _openMenu() async {
-    _game.pauseEngine();
+      if (!mounted) return;
 
-    while (mounted) {
-      final action = await showGameMenuDialog<EcoSortMenuAction>(
+      final action = await showGameMenuDialog<GameMenuAction>(
         context: context,
         title: 'ECO SORT - MENU',
-        icon: const Icon(
-          Icons.delete_outline,
-          size: 42,
-          color: Color.fromARGB(255, 128, 174, 121),
+        headerBadge: DifficultyBadge(
+          difficulty: GameDifficulty.easy,
         ),
         items: const [
-          GameMenuItem(label: 'Retomar Jogo', value: EcoSortMenuAction.resume , icon: Icon(Icons.play_arrow)),
+          //GameMenuItem(label: 'Retomar Jogo', value: GameMenuAction.resume, icon: Icon(Icons.play_arrow)),
           GameMenuItem(
             label: 'Reiniciar Jogo',
-            value: EcoSortMenuAction.restart,
+            value: GameMenuAction.restart,
             icon: Icon(Icons.refresh),
+
           ),
           GameMenuItem(
             label: 'Sair do Jogo',
-            value: EcoSortMenuAction.exit,
+            value: GameMenuAction.exit,
             isDestructive: true,
             icon: Icon(Icons.exit_to_app),
 
@@ -118,19 +118,71 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
       if (!mounted) return;
 
       switch (action) {
+        case GameMenuAction.restart:
+          //_game.restart();
+          setState(() {
+            _saved = false;
+            _createNewGame();
+          });
+          break;
+        case GameMenuAction.exit:
         case null:
-        case EcoSortMenuAction.resume:
+          Navigator.of(context).pop(result);
+          break;
+        case GameMenuAction.resume:
+          break;
+      }
+    });
+  }
+
+  Future<void> _openMenu() async {
+    _game.pauseEngine();
+
+    while (mounted) {
+      final action = await showGameMenuDialog<GameMenuAction>(
+        context: context,
+        title: 'ECO SORT - MENU',
+        icon: const Icon(
+          Icons.delete_outline,
+          size: 42,
+          color: Color.fromARGB(255, 128, 174, 121),
+        ),
+        items: const [
+          GameMenuItem(
+            label: 'Retomar Jogo',
+            value: GameMenuAction.resume,
+            icon: Icon(Icons.play_arrow),
+          ),
+          GameMenuItem(
+            label: 'Reiniciar Jogo',
+            value: GameMenuAction.restart,
+            icon: Icon(Icons.refresh),
+          ),
+          GameMenuItem(
+            label: 'Sair do Jogo',
+            value: GameMenuAction.exit,
+            isDestructive: true,
+            icon: Icon(Icons.exit_to_app),
+          ),
+        ],
+      );
+
+      if (!mounted) return;
+
+      switch (action) {
+        case null:
+        case GameMenuAction.resume:
           _game.resumeEngine();
           return;
 
-        case EcoSortMenuAction.restart:
+        case GameMenuAction.restart:
           setState(() {
             _saved = false;
             _createNewGame();
           });
           return;
 
-        case EcoSortMenuAction.exit:
+        case GameMenuAction.exit:
           final confirmed = await showConfirmExitDialog(context);
           if (!mounted) return;
 

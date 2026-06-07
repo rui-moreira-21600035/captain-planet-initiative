@@ -1,62 +1,28 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:eco_sort_game/src/audio/ecosort_sfx_assets.dart';
 import 'package:eco_sort_game/src/domain/bin_type_mapper.dart';
+import 'package:eco_sort_game/src/domain/wrong_answer_record.dart';
 import 'package:eco_sort_game/src/game/components/countdown_ring_component.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:sound_effect/sound_effect.dart';
 
 import '../data/catalog/catalog_loader.dart';
 import '../domain/bin_type.dart';
 import '../domain/waste_item.dart';
+import '../domain/ecosort_game_result.dart';
+import '../domain/ecosort_feedback.dart';
 import 'components/bin_component.dart';
 import 'components/waste_item_component.dart';
 import 'controllers/round_controller.dart';
 import 'controllers/scoring_controller.dart';
 import 'components/eco_sort_hud_component.dart';
 
-enum GameLoadState { booting, loading, ready, finished, error }
-
-enum EndReason { completed, backToHub, appPaused, appDetached }
-
-class EcoSortGameResult {
-  final int score;
-  final int correct;
-  final int wrong;
-  final int streakMax;
-  final int durationMs;
-  final int totalRoundsPlayed;
-  final EndReason reason;
-
-  const EcoSortGameResult({
-    required this.score,
-    required this.correct,
-    required this.wrong,
-    required this.streakMax,
-    required this.durationMs,
-    required this.totalRoundsPlayed,
-    required this.reason,
-  });
-}
-
-/// Evento para a UI Flutter mostrar toast/snackbar
-class EcoSortFeedback {
-  final bool isCorrect;
-  final BinType chosen;
-  final BinType expected;
-  final WasteItem item;
-
-  const EcoSortFeedback({
-    required this.isCorrect,
-    required this.chosen,
-    required this.expected,
-    required this.item,
-  });
-}
+import 'package:common_gamekit/common_gamekit.dart';
 
 class EcoSortFlameGame extends FlameGame {
   static Vector2 logicalResolution = Vector2(1280, 720);
@@ -68,7 +34,9 @@ class EcoSortFlameGame extends FlameGame {
 
   GameLoadState _state = GameLoadState.booting;
 
-  final _soundEffectPlugin = SoundEffect();
+  final _soundEffectPlugin = SfxService.instance;
+
+  final List<WrongAnswerRecord> _wrongAnswers = [];
 
   late final CatalogLoader _catalogLoader;
   late final ScoringController _scoring;
@@ -92,16 +60,20 @@ class EcoSortFlameGame extends FlameGame {
 
   static const double roundSeconds = 10.0;
 
+  int? _lastTickSecond;
+
   late TimerComponent _roundTimerComp;
   double _timeLeft = roundSeconds;
   double _getTimeLeft() => _timeLeft;
   TextComponent? _timerText;
 
   // Feedback stream
-  final StreamController<EcoSortFeedback> _feedbackCtrl = StreamController<EcoSortFeedback>.broadcast();
+  final StreamController<EcoSortFeedback> _feedbackCtrl =
+      StreamController<EcoSortFeedback>.broadcast();
   Stream<EcoSortFeedback> get feedbackStream => _feedbackCtrl.stream;
 
-  final StreamController<EcoSortGameResult> _resultCtrl = StreamController<EcoSortGameResult>.broadcast();
+  final StreamController<EcoSortGameResult> _resultCtrl =
+      StreamController<EcoSortGameResult>.broadcast();
   Stream<EcoSortGameResult> get resultStream => _resultCtrl.stream;
 
   @override
@@ -115,8 +87,8 @@ class EcoSortFlameGame extends FlameGame {
 
     // Define o prefixo para os assets no Flame Images
     //images.prefix = _pkg + images.prefix;
-    await _soundEffectPlugin.initialize(maxStreams:4);
-    loadSounds();
+    await _soundEffectPlugin.init();
+    // loadSounds();
 
     camera = CameraComponent.withFixedResolution(
       width: logicalResolution.x,
@@ -145,7 +117,7 @@ class EcoSortFlameGame extends FlameGame {
     _roundTimerComp.timer.stop();
     _feedbackCtrl.close();
     _resultCtrl.close();
-    releaseSounds();
+    // releaseSounds();
     super.onRemove();
   }
 
@@ -157,12 +129,40 @@ class EcoSortFlameGame extends FlameGame {
 
     // countdown
     _timeLeft = (_timeLeft - dt).clamp(0.0, roundSeconds);
-    if(_timeLeft.toStringAsFixed(2) == "3.00") {
-      _soundEffectPlugin.play('clock_tick_tock_3secs', volume: 0.5);
-    }
-    _timerText?.text = 'Tempo: ${_timeLeft.ceil()}';
-    Logger().d('Time left: ${_timeLeft.toStringAsFixed(2)}s');
+    // if (_timeLeft.toStringAsFixed(2) == "3.00") {
+    //   _soundEffectPlugin.play(EcoSortSfxAssets.clockTickTock3Secs);
+    // }
+    // _timerText?.text = 'Tempo: ${_timeLeft.ceil()}';
+    // Logger().d('Time left: ${_timeLeft.toStringAsFixed(2)}s');
+
+    _updateWarningTick();
   }
+
+  void _updateWarningTick() {
+
+  if (_state != GameLoadState.ready) return;
+
+  if (_inputLocked) return;
+
+  final seconds = _timeLeft.ceil();
+
+  final shouldTick = seconds >= 1 && seconds <= 3;
+
+  if (!shouldTick) {
+
+    _lastTickSecond = null;
+
+    return;
+
+  }
+
+  if (_lastTickSecond == seconds) return;
+
+  _lastTickSecond = seconds;
+
+  SfxService.instance.play(EcoSortSfxAssets.clockTickTock);
+
+}
 
   void _buildBootScene() {
     // Background
@@ -199,37 +199,41 @@ class EcoSortFlameGame extends FlameGame {
   }
 
   void _onRoundTimeout() {
-      if (_state != GameLoadState.ready) return;
-      if (_inputLocked) return;
+    if (_state != GameLoadState.ready) return;
+    if (_inputLocked) return;
 
-      _inputLocked = true;
+    _inputLocked = true;
 
-      final current = _waste.item;
-      if (current != null) {
-        _scoring.registerWrong();
+    final current = _waste.item;
+    if (current != null) {
+      _scoring.registerWrong();
 
-        // Hint do contentor correcto
-        _binComps[current.bin]?.playHintCorrect();
-        _soundEffectPlugin.play('wrong', volume: 0.5);
+      // Hint do contentor correcto
+      _binComps[current.bin]?.playHintCorrect();
+      _soundEffectPlugin.play(EcoSortSfxAssets.wrong);
 
-        // feedback para UI
-        _feedbackCtrl.add(EcoSortFeedback(
+      // feedback para UI
+      _feedbackCtrl.add(
+        EcoSortFeedback(
           isCorrect: false,
-          chosen: current.bin,     // ou um valor “dummy”
+          chosen: current.bin, // ou um valor “dummy”
           expected: current.bin,
           item: current,
-        ));
-      }
+        ),
+      );
+    }
 
-      add(TimerComponent(
+    add(
+      TimerComponent(
         period: 0.65,
         removeOnFinish: true,
         onTick: () {
           _inputLocked = false;
           _nextRound();
         },
-      ));
-    }
+      ),
+    );
+  }
 
   Future<void> _loadGameData() async {
     try {
@@ -239,7 +243,8 @@ class EcoSortFlameGame extends FlameGame {
       _items = catalog.items.map((i) {
         return WasteItem(
           id: i.id,
-          label: i.label,
+          labelPt: i.labelPt,
+          labelEn: i.labelEn,
           bin: BinTypeMapper.fromId(i.bin),
           asset: i.asset,
         );
@@ -314,18 +319,18 @@ class EcoSortFlameGame extends FlameGame {
 
     // Frame lógico para o item no painel esquerdo (centrado, com margens)
     final frameCenter = Vector2(leftW * 0.5, h * 0.52);
-    final frameSize   = Vector2(leftW * 0.75, h * 0.55);
+    final frameSize = Vector2(leftW * 0.75, h * 0.55);
 
     _wasteFrameCenter = Vector2(leftW * 0.5, h * 0.52);
-    _wasteFrameSize   = Vector2(leftW * 0.75, h * 0.55);
-
+    _wasteFrameSize = Vector2(leftW * 0.75, h * 0.55);
 
     // 1) Background (preenche tudo)
     world.add(
       RectangleComponent(
         position: Vector2.zero(),
         size: Vector2(w, h),
-        paint: Paint()..color = const Color.fromARGB(255, 225, 226, 225), // cor do fundo
+        paint: Paint()
+          ..color = const Color.fromARGB(255, 225, 226, 225), // cor do fundo
       ),
     );
 
@@ -352,9 +357,7 @@ class EcoSortFlameGame extends FlameGame {
     );
 
     // 3) Lixo no painel esquerdo (centrado)
-    _waste = WasteItemComponent(
-      position: frameCenter,
-    )
+    _waste = WasteItemComponent(position: frameCenter)
       ..anchor = Anchor.center
       ..size = frameSize;
     world.add(_waste);
@@ -367,12 +370,13 @@ class EcoSortFlameGame extends FlameGame {
       BinType.blue,
       BinType.green,
       BinType.yellow,
-      BinType.brown
+      BinType.brown,
     ];
 
     // Calcula tamanhos dos bins para caberem no painel direito, mantendo proporção e deixando espaço entre eles
-    final maxBinHeight = h * 0.26; // aumenta se quiseres bins maiores (0.22–0.28)
-    final gap = rightW * 0.04;     // reduz espaço (0.03–0.06)
+    final maxBinHeight =
+        h * 0.26; // aumenta se quiseres bins maiores (0.22–0.28)
+    final gap = rightW * 0.04; // reduz espaço (0.03–0.06)
 
     final binSizes = <BinType, Vector2>{};
     double totalWidth = 0;
@@ -421,7 +425,8 @@ class EcoSortFlameGame extends FlameGame {
       RectangleComponent(
         position: hudCardPos,
         size: hudCardSize,
-        paint: Paint()..color = const Color(0x14FFFFFF), // branco com pouca opacidade
+        paint: Paint()
+          ..color = const Color(0x14FFFFFF), // branco com pouca opacidade
         priority: 900, // atrás do texto (texto está 1000)
       ),
     );
@@ -447,7 +452,10 @@ class EcoSortFlameGame extends FlameGame {
       CountdownRingComponent(
         totalSeconds: roundSeconds,
         timeLeftSeconds: _getTimeLeft,
-        position: Vector2(w - 40 -  hudPad - (ringSize / 2), hudTop + ringSize / 2),
+        position: Vector2(
+          w - 40 - hudPad - (ringSize / 2),
+          hudTop + ringSize / 2,
+        ),
         size: Vector2.all(78),
         strokeWidth: 7,
       ),
@@ -469,21 +477,28 @@ class EcoSortFlameGame extends FlameGame {
     if (isCorrect) {
       _scoring.registerCorrect();
       _binComps[chosen]?.playCorrect();
-      _soundEffectPlugin.play('correct_2', volume: 0.3);
+      _soundEffectPlugin.play(EcoSortSfxAssets.correct);
     } else {
       _scoring.registerWrong();
+
+      _wrongAnswers.add(
+        WrongAnswerRecord(item: current, chosen: chosen, expected: expected),
+      );
+
       _binComps[chosen]?.playWrong();
-      _soundEffectPlugin.play('wrong', volume: 0.5);
+      _soundEffectPlugin.play(EcoSortSfxAssets.wrong);
       _binComps[expected]?.playHintCorrect(); // mostra o contentor correcto
     }
 
     // Envia feedback para a UI (snackbar)
-    _feedbackCtrl.add(EcoSortFeedback(
-      isCorrect: isCorrect,
-      chosen: chosen,
-      expected: expected,
-      item: current,
-    ));
+    _feedbackCtrl.add(
+      EcoSortFeedback(
+        isCorrect: isCorrect,
+        chosen: chosen,
+        expected: expected,
+        item: current,
+      ),
+    );
 
     // Dá tempo à animação antes de avançar
     add(
@@ -506,16 +521,7 @@ class EcoSortFlameGame extends FlameGame {
       return;
     }
 
-    WasteItem next;
-    if (_items.length == 1) {
-      next = _items.first;
-    } else {
-      do {
-        next = _items[_rng.nextInt(_items.length)];
-      } while (_lastItem != null && next.id == _lastItem!.id);
-    }
-
-    _lastItem = next;
+    final next = _rounds.nextOrLoop();
 
     final sprite = _itemSprites[next.id];
     if (sprite == null) {
@@ -523,6 +529,8 @@ class EcoSortFlameGame extends FlameGame {
     }
 
     _waste.setItem(next, sprite);
+    
+    _waste.position = _wasteFrameCenter; // garante que o item começa centrado
     _fitWasteIntoFrame(_wasteFrameSize);
 
     // (Opcional) se queres que também reinicie aqui:
@@ -559,31 +567,8 @@ class EcoSortFlameGame extends FlameGame {
       durationMs: (now - _startMs).clamp(0, 1 << 30),
       totalRoundsPlayed: _rounds.totalRoundsPlayed,
       reason: reason,
+      wrongAnswers: List.unmodifiable(_wrongAnswers),
     );
-  }
-
-  Future<void> loadSounds() async {
-    try {
-      await _soundEffectPlugin.load('correct', '${_pkg}assets/audio/correct.mp3');
-      await _soundEffectPlugin.load('correct_2', '${_pkg}assets/audio/correct_2.mp3');
-      await _soundEffectPlugin.load('wrong', '${_pkg}assets/audio/wrong.mp3');
-      await _soundEffectPlugin.load('clock_tick_tock', '${_pkg}assets/audio/clock_tick_tock.mp3');
-      await _soundEffectPlugin.load('clock_tick_tock_3secs', '${_pkg}assets/audio/clock_tick_tock_3secs.mp3');
-    } catch (e) {
-      Logger().e('Erro ao carregar sons: $e'); // loga o erro, mas não impede o jogo de funcionar
-    }
-  }
-
-  Future<void> releaseSounds() async {
-    await _soundEffectPlugin.release();
-  }
-
-  void restart() {
-    if (_state != GameLoadState.ready) return;
-    _scoring.reset();
-    _rounds.reset();
-    _startMs = DateTime.now().millisecondsSinceEpoch;
-    _nextRound();
   }
 
   void _fitWasteIntoFrame(Vector2 frameSize) {
@@ -615,8 +600,7 @@ class EcoSortFlameGame extends FlameGame {
 
     _waste.size = Vector2(srcW * scale, srcH * scale);
 
-    // garante alinhamento com frame
+    // garante alinhamento com frame (centrodo, com margem vertical consistente)
     _waste.anchor = Anchor.center;
-    // IMPORTANTÍSSIMO: não mexer aqui na posição — mantém o frameCenter
   }
 }

@@ -3,6 +3,8 @@ library;
 export 'src/game_module.dart';
 
 export 'src/domain/game_difficulty.dart';
+export 'src/domain/game_menu_action.dart';
+export 'src/domain/game_state.dart';
 
 export 'src/ui/dialogs/confirm_exit_dialog.dart';
 export 'src/ui/dialogs/difficulty_dialog.dart';
@@ -17,3 +19,6 @@ export 'src/ui/widgets/game_overlay_card.dart';
 export 'src/scores/local_score_repository_sqflite.dart';
 export 'src/scores/score_entry.dart';
 export 'src/scores/score_repository.dart';
+
+export 'src/audio/sfx_service.dart';
+export 'src/audio/sfx_asset.dart';

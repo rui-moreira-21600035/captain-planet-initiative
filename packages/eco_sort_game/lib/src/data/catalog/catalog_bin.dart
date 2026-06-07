@@ -1,17 +1,20 @@
 class CatalogBin {
   final String id;     // "blue"
-  final String label;  // "Papel"
+  final String labelPt;  // "Papel"
+  final String labelEn;  // "Paper"
   final String asset;  // "assets/images/containers/blue.png"
 
   const CatalogBin({
     required this.id,
-    required this.label,
+    required this.labelPt,
+    required this.labelEn,
     required this.asset,
   });
 
   factory CatalogBin.fromJson(Map<String, dynamic> json) => CatalogBin(
         id: json['id'] as String,
-        label: json['label'] as String,
+        labelPt: json['label_pt'] as String,
+        labelEn: json['label_en'] as String,
         asset: json['asset'] as String,
       );
 }

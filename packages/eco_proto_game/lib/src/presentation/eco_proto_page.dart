@@ -8,12 +8,6 @@ import 'package:flutter/services.dart';
 
 import 'package:eco_proto_game/src/game/eco_proto_flame_game.dart';
 
-enum GameLoadState { booting, loading, ready, error }
-
-enum EndReason { backToHub, appPaused, appDetached }
-
-enum EcoProtoMenuAction { resume, restart, exit }
-
 class EcoProtoPage extends StatefulWidget {
   final ScoreRepository scoreRepo;
 
@@ -108,24 +102,24 @@ class _EcoProtoPageState extends State<EcoProtoPage>
     _game.pauseEngine();
 
     while (mounted) {
-      final action = await showGameMenuDialog<EcoProtoMenuAction>(
+      final action = await showGameMenuDialog<GameMenuAction>(
         context: context,
         title: 'ECO PROTO - MENU',
         icon: const Icon(Icons.science, size: 42),
         items: const [
           GameMenuItem(
             label: 'RETOMAR JOGO',
-            value: EcoProtoMenuAction.resume,
+            value: GameMenuAction.resume,
             icon: Icon(Icons.play_arrow),
           ),
           GameMenuItem(
             label: 'REINICIAR JOGO',
-            value: EcoProtoMenuAction.restart,
+            value: GameMenuAction.restart,
             icon: Icon(Icons.refresh),
           ),
           GameMenuItem(
             label: 'SAIR DO JOGO',
-            value: EcoProtoMenuAction.exit,
+            value: GameMenuAction.exit,
             isDestructive: true,
             icon: Icon(Icons.logout),
           ),
@@ -136,18 +130,18 @@ class _EcoProtoPageState extends State<EcoProtoPage>
 
       switch (action) {
         case null:
-        case EcoProtoMenuAction.resume:
+        case GameMenuAction.resume:
           _game.resumeEngine();
           return;
 
-        case EcoProtoMenuAction.restart:
+        case GameMenuAction.restart:
           setState(() {
             _saved = false;
             _createNewGame();
           });
           return;
 
-        case EcoProtoMenuAction.exit:
+        case GameMenuAction.exit:
           final confirmed = await showConfirmExitDialog(context);
           if (!mounted) return;
 
