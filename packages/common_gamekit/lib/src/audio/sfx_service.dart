@@ -26,6 +26,8 @@ class SfxService {
       await _plugin.initialize(maxStreams: 4);
       _initialized = true;
     } on PlatformException catch (e) {
+      // O plugin já se encontra inicializado (ex.: hot reload ou
+      // inicialização externa). Consideramos o estado válido.
       if (e.code == 'Already initialized') {
         _initialized = true;
         return;
@@ -69,7 +71,11 @@ class SfxService {
   }
 
   Future<void> play(SfxAsset asset) async {
-    await load(asset);
-    await _plugin.play(asset.key);
+    try{
+      await load(asset);
+      await _plugin.play(asset.key);
+    } catch (_) {
+      // Ignorar falhas de audio, para não quebrar a experiência do jogo.
+    }
   }
 }

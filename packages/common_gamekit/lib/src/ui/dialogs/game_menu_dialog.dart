@@ -30,7 +30,7 @@ Future<T?> showGameMenuDialog<T>({
     pageBuilder: (_, _, _) => Center(
       child: _GameMenuDialogBody<T>(title: title, icon: icon, headerBadge: headerBadge, items: items),
     ),
-    transitionBuilder: (_, anim, __, child) {
+    transitionBuilder: (_, anim, _, child) {
       final curved = CurvedAnimation(parent: anim, curve: Curves.easeOut);
       return FadeTransition(
         opacity: curved,

@@ -1,0 +1,77 @@
+[
+  {
+    "id": "001",
+    "fact_en": "The ocean covers more than 70% of Earth's surface, making it the planet's largest habitat.",
+    "fact_pt": "O oceano cobre mais de 70% da superfície da Terra, sendo o maior habitat do planeta."
+  },
+  {
+    "id": "002",
+    "fact_en": "A large part of the oxygen we breathe is produced by tiny ocean organisms called phytoplankton.",
+    "fact_pt": "Grande parte do oxigénio que respiramos é produzido por pequenos organismos marinhos chamados fitoplâncton."
+  },
+  {
+    "id": "003",
+    "fact_en": "Plastic waste dropped far from the sea can be carried by wind, rain and rivers until it reaches the ocean.",
+    "fact_pt": "O lixo plástico deixado longe do mar pode ser transportado pelo vento, pela chuva e pelos rios até chegar ao oceano."
+  },
+  {
+    "id": "004",
+    "fact_en": "Some marine animals mistake plastic bags and small plastic pieces for food, which can injure or kill them.",
+    "fact_pt": "Alguns animais marinhos confundem sacos e pequenos pedaços de plástico com alimento, o que pode feri-los ou matá-los."
+  },
+  {
+    "id": "005",
+    "fact_en": "Coral reefs are built by living animals and provide shelter, food and nursery areas for many marine species.",
+    "fact_pt": "Os recifes de coral são formados por animais vivos e oferecem abrigo, alimento e zonas de crescimento a muitas espécies marinhas."
+  },
+  {
+    "id": "006",
+    "fact_en": "Seagrass meadows can store carbon in their roots and sediments, helping to reduce the amount of carbon dioxide in the atmosphere.",
+    "fact_pt": "As pradarias marinhas conseguem armazenar carbono nas suas raízes e sedimentos, que ajudam a reduzir a quantidade de dióxido de carbono na atmosfera."
+  },
+  {
+    "id": "007",
+    "fact_en": "Mangrove forests protect coastlines from waves and storms while providing shelter for fish, crabs and birds.",
+    "fact_pt": "Os mangais protegem as zonas costeiras das ondas e tempestades, enquanto dão abrigo a peixes, caranguejos e aves."
+  },
+  {
+    "id": "008",
+    "fact_en": "Lost or abandoned fishing nets can keep trapping marine animals for years and are known as ghost gear.",
+    "fact_pt": "Redes de pesca perdidas ou abandonadas podem continuar a prender animais marinhos durante anos e são conhecidas como pesca fantasma."
+  },
+  {
+    "id": "009",
+    "fact_en": "Microplastics are tiny plastic particles that can be eaten by small marine animals and move through the food chain.",
+    "fact_pt": "Os microplásticos são pequenas partículas de plástico que podem ser ingeridas por animais marinhos pequenos e entrar na cadeia alimentar."
+  },
+  {
+    "id": "010",
+    "fact_en": "Oceans absorb heat and help regulate Earth's climate, but warming waters can harm marine ecosystems.",
+    "fact_pt": "Os oceanos absorvem calor e ajudam a regular o clima da Terra, mas o aquecimento das águas pode prejudicar os ecossistemas marinhos."
+  },
+  {
+    "id": "011",
+    "fact_en": "Sea turtles often return to beaches to lay their eggs, so beach pollution can make nesting harder and more dangerous.",
+    "fact_pt": "As tartarugas marinhas regressam muitas vezes às praias para pôr ovos, por isso a poluição costeira pode tornar a nidificação mais difícil e perigosa."
+  },
+  {
+    "id": "012",
+    "fact_en": "Noise from ships and human activity can disturb whales, dolphins and other marine animals that rely on sound.",
+    "fact_pt": "O ruído de navios e de atividades humanas pode perturbar baleias, golfinhos e outros animais marinhos que dependem do som."
+  },
+  {
+    "id": "013",
+    "fact_en": "Healthy oceans provide food, jobs, transport routes and recreation for millions of people around the world.",
+    "fact_pt": "Oceanos saudáveis fornecem alimento, empregos, rotas de transporte e lazer a milhões de pessoas em todo o mundo."
+  },
+  {
+    "id": "014",
+    "fact_en": "Using reusable bottles, sorting waste correctly and avoiding litter can help reduce pollution that reaches the ocean.",
+    "fact_pt": "Usar garrafas reutilizáveis, separar corretamente o lixo e não deitar resíduos para o chão ajuda a reduzir a poluição que chega ao oceano."
+  },
+  {
+    "id": "015",
+    "fact_en": "Marine protected areas can help fish populations, habitats and ecosystems recover when they are well managed.",
+    "fact_pt": "As áreas marinhas protegidas podem ajudar populações de peixes, habitats e ecossistemas a recuperar quando são bem geridas."
+  }
+]

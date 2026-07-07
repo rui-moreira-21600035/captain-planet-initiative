@@ -32,14 +32,14 @@
       "asset": "waste_items/blue/cardboard_box.png",
       "bin": "blue",
       "label_en": "Cardboard Box",
-      "label_pt": "Caixa de Papel"  
+      "label_pt": "Caixa de Cartão"
     },
     {
       "id": "blue_old_newspaper",
       "asset": "waste_items/blue/old_newspaper.png",
       "bin": "blue",
       "label_en": "Old Newspaper",
-      "label_pt": "Jornal Velho"
+      "label_pt": "Jornal Antigo"
     },
     {
       "id": "brown_apple",
@@ -60,7 +60,7 @@
       "asset": "waste_items/brown/fish_bones.png",
       "bin": "brown",
       "label_en": "Fish Bones",
-      "label_pt": "Ossos de Peixe"
+      "label_pt": "Espinhas de Peixe"
     },
     {
       "id": "brown_pizza_slice",
@@ -74,14 +74,14 @@
       "asset": "waste_items/green/broken_bottle.png",
       "bin": "green",
       "label_en": "Broken Bottle",
-      "label_pt": "Garrafa Quebrada"
+      "label_pt": "Garrafa Partida"
     },
     {
       "id": "green_raspberry_jam_jar",
       "asset": "waste_items/green/raspberry_jam_jar.png",
       "bin": "green",
-      "label_en": "Jam Jar",
-      "label_pt": "Frasco de Geleia"
+      "label_en": "Raspberry Jam Jar",
+      "label_pt": "Frasco de Compota de Framboesa"
     },
     {
       "id": "green_wine_bottle",
@@ -102,7 +102,7 @@
       "asset": "waste_items/yellow/orange_juice_packet.png",
       "bin": "yellow",
       "label_en": "Orange Juice Packet",
-      "label_pt": "Pacote de Suco de Laranja"
+      "label_pt": "Pacote de Sumo de Laranja"
     },
     {
       "id": "yellow_soda_can",
@@ -123,7 +123,7 @@
       "asset": "waste_items/yellow/yogurt_can.png",
       "bin": "yellow",
       "label_en": "Yogurt Can",
-      "label_pt": "Lata de Iogurte"
+      "label_pt": "Embalagem de Iogurte"
     }
   ]
 }

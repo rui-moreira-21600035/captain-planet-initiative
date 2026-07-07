@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:eco_sort_game/src/audio/ecosort_sfx_assets.dart';
 import 'package:eco_sort_game/src/domain/bin_type_mapper.dart';
@@ -9,7 +8,6 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
 
 import '../data/catalog/catalog_loader.dart';
 import '../domain/bin_type.dart';
@@ -50,8 +48,6 @@ class EcoSortFlameGame extends FlameGame {
   final Map<String, Sprite> _itemSprites = {};
 
   late WasteItemComponent _waste;
-  final _rng = math.Random();
-  WasteItem? _lastItem;
 
   int _startMs = 0;
 
@@ -65,7 +61,6 @@ class EcoSortFlameGame extends FlameGame {
   late TimerComponent _roundTimerComp;
   double _timeLeft = roundSeconds;
   double _getTimeLeft() => _timeLeft;
-  TextComponent? _timerText;
 
   // Feedback stream
   final StreamController<EcoSortFeedback> _feedbackCtrl =
@@ -80,15 +75,10 @@ class EcoSortFlameGame extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // CRÍTICO:
-    // o Images do Flame mete prefix "assets/images/" por defeito.
-    // Aqui queremos carregar por asset key completa (packages/.../assets/...)
-    images.prefix = '${_pkg}assets/images/'; // <-- desliga prefix automático
-
     // Define o prefixo para os assets no Flame Images
-    //images.prefix = _pkg + images.prefix;
+    images.prefix = '${_pkg}assets/images/';
+
     await _soundEffectPlugin.init();
-    // loadSounds();
 
     camera = CameraComponent.withFixedResolution(
       width: logicalResolution.x,
@@ -98,7 +88,7 @@ class EcoSortFlameGame extends FlameGame {
     camera.viewfinder.anchor = Anchor.topLeft;
     camera.viewfinder.position = Vector2.zero();
 
-    camera.viewfinder.zoom = 1.05; // ajusta entre 1.02–1.10 conforme o device
+    camera.viewfinder.zoom = 1.05; // ~ 1.02–1.10 conforme o dispositivo
 
     add(camera);
 
@@ -108,7 +98,7 @@ class EcoSortFlameGame extends FlameGame {
     _buildBootScene();
     _state = GameLoadState.loading;
 
-    // Importante: NÃO FAZER loads pesado aqui dentro.
+    // Não fazer loads pesados aqui dentro.
     Future.microtask(_loadGameData);
   }
 
@@ -117,52 +107,37 @@ class EcoSortFlameGame extends FlameGame {
     _roundTimerComp.timer.stop();
     _feedbackCtrl.close();
     _resultCtrl.close();
-    // releaseSounds();
     super.onRemove();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-
     if (_state != GameLoadState.ready) return;
 
     // countdown
     _timeLeft = (_timeLeft - dt).clamp(0.0, roundSeconds);
-    // if (_timeLeft.toStringAsFixed(2) == "3.00") {
-    //   _soundEffectPlugin.play(EcoSortSfxAssets.clockTickTock3Secs);
-    // }
-    // _timerText?.text = 'Tempo: ${_timeLeft.ceil()}';
-    // Logger().d('Time left: ${_timeLeft.toStringAsFixed(2)}s');
-
     _updateWarningTick();
   }
 
   void _updateWarningTick() {
+    if (_state != GameLoadState.ready) return;
+    if (_inputLocked) return;
 
-  if (_state != GameLoadState.ready) return;
+    final seconds = _timeLeft.ceil();
+    final shouldTick = seconds >= 1 && seconds <= 3;
 
-  if (_inputLocked) return;
+    if (!shouldTick) {
+      _lastTickSecond = null;
+      return;
+    }
 
-  final seconds = _timeLeft.ceil();
+    if (_lastTickSecond == seconds) return;
 
-  final shouldTick = seconds >= 1 && seconds <= 3;
-
-  if (!shouldTick) {
-
-    _lastTickSecond = null;
-
-    return;
+    _lastTickSecond = seconds;
+    SfxService.instance.play(EcoSortSfxAssets.clockTickTock);
 
   }
-
-  if (_lastTickSecond == seconds) return;
-
-  _lastTickSecond = seconds;
-
-  SfxService.instance.play(EcoSortSfxAssets.clockTickTock);
-
-}
 
   void _buildBootScene() {
     // Background
@@ -183,18 +158,6 @@ class EcoSortFlameGame extends FlameGame {
       priority: 1000,
     );
 
-    // _timerText = TextComponent(
-    //   text: 'Tempo: 10',
-    //   position: Vector2(logicalResolution.x * 0.30 + 30, 20), // começa no painel direito
-    //   anchor: Anchor.topLeft,
-    //   textRenderer: TextPaint(
-    //     style: const TextStyle(fontSize: 28, color: Color(0xFF1E63C5)),
-    //   ),
-    //   priority: 1000,
-    // );
-    // camera.viewport.add(_timerText!);
-
-    // Coloca no viewport para ficar estático
     camera.viewport.add(_loadingText!);
   }
 
@@ -216,7 +179,7 @@ class EcoSortFlameGame extends FlameGame {
       _feedbackCtrl.add(
         EcoSortFeedback(
           isCorrect: false,
-          chosen: current.bin, // ou um valor “dummy”
+          chosen: current.bin,
           expected: current.bin,
           item: current,
         ),
@@ -311,8 +274,6 @@ class EcoSortFlameGame extends FlameGame {
   Future<void> _buildScene() async {
     world.removeAll(world.children.toList());
 
-    // TODO: Criar uma progress bar até ao final da ronda (Progressbar/ Ronda X de Y)
-
     final w = logicalResolution.x;
     final h = logicalResolution.y;
     final leftW = logicalResolution.x * 0.30;
@@ -343,7 +304,7 @@ class EcoSortFlameGame extends FlameGame {
       ),
     );
 
-    // 3) Frame para o lixo (centrado no painel esquerdo), invisível
+    // 2.1) Frame para o lixo (centrado no painel esquerdo), invisível
     // Mantém a referência de layout sem desenhar borda.
     world.add(
       RectangleComponent(
@@ -356,13 +317,13 @@ class EcoSortFlameGame extends FlameGame {
       ),
     );
 
-    // 3) Lixo no painel esquerdo (centrado)
+    // 2.2) Lixo no painel esquerdo (centrado)
     _waste = WasteItemComponent(position: frameCenter)
       ..anchor = Anchor.center
       ..size = frameSize;
     world.add(_waste);
 
-    // 4) Bins em linha horizontal no painel direito
+    // 3) Bins em linha horizontal no painel direito
     final rightX = leftW;
     final rightW = w - rightX;
 
@@ -373,10 +334,10 @@ class EcoSortFlameGame extends FlameGame {
       BinType.brown,
     ];
 
-    // Calcula tamanhos dos bins para caberem no painel direito, mantendo proporção e deixando espaço entre eles
+    // 3.1) Calcula tamanhos dos bins para caberem no painel direito, mantendo proporção e deixando espaço entre eles
     final maxBinHeight =
-        h * 0.26; // aumenta se quiseres bins maiores (0.22–0.28)
-    final gap = rightW * 0.04; // reduz espaço (0.03–0.06)
+        h * 0.26; // Altura dos bins
+    final gap = rightW * 0.04; // reduz espaço entre bins para caber melhor
 
     final binSizes = <BinType, Vector2>{};
     double totalWidth = 0;
@@ -393,7 +354,7 @@ class EcoSortFlameGame extends FlameGame {
     }
     totalWidth += gap * (bins.length - 1);
 
-    // Centra o grupo de bins inteiro no painel direito
+    // 3.2) Centra o grupo de bins inteiro no painel direito
     final startX = rightX + (rightW - totalWidth) / 2;
     final y = h * 0.50;
 
@@ -417,7 +378,7 @@ class EcoSortFlameGame extends FlameGame {
       cursorX += size.x + gap;
     }
 
-    // 5) Painel/HUD direito (fundo semitransparente atrás do texto)
+    // 4) Painel/HUD direito (fundo semitransparente atrás do texto)
     final hudCardPos = Vector2(rightX + 12, 8);
     final hudCardSize = Vector2((w - rightX) - 24, 100);
 
@@ -434,7 +395,7 @@ class EcoSortFlameGame extends FlameGame {
     final hudTop = 24.0;
     final hudPad = 24.0;
 
-    // 5.1) HUD no viewport (fixo no ecrã)
+    // 4.1) HUD no viewport (fixo no ecrã)
     camera.viewport.add(
       EcoSortHudComponent(
         scoring: _scoring,
@@ -445,7 +406,7 @@ class EcoSortFlameGame extends FlameGame {
       ),
     );
 
-    // 5.2) Anel de contagem decrescente
+    // 4.2) Anel de contagem decrescente
     const ringSize = 80.0;
 
     camera.viewport.add(
@@ -533,7 +494,6 @@ class EcoSortFlameGame extends FlameGame {
     _waste.position = _wasteFrameCenter; // garante que o item começa centrado
     _fitWasteIntoFrame(_wasteFrameSize);
 
-    // (Opcional) se queres que também reinicie aqui:
     _resetRoundTimer();
   }
 
@@ -592,7 +552,7 @@ class EcoSortFlameGame extends FlameGame {
       scale = maxW / srcW;
     }
 
-    // Guardrail final para nunca passar o limite vertical.
+    // Baliza para nunca passar o limite vertical.
     final scaledH = srcH * scale;
     if (scaledH > maxH) {
       scale = maxH / srcH;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'game_registry.dart';
+import 'package:hub_app/features/launcher/game_registry.dart';
 
 class LauncherPage extends StatelessWidget {
   const LauncherPage({super.key});
@@ -11,7 +11,7 @@ class LauncherPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Hub de Mini-jogos')),
       body: ListView.separated(
         itemCount: gameRegistry.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final module = gameRegistry[index];
           return ListTile(

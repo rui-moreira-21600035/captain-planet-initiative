@@ -15,7 +15,7 @@ Future<GameDifficulty?> showDifficultyDialog(
     barrierDismissible: true,
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 180),
-    pageBuilder: (_, __, ___) {
+    pageBuilder: (_, _, _) {
       return Center(
         child: StatefulBuilder(
           builder: (context, setState) {
@@ -29,7 +29,7 @@ Future<GameDifficulty?> showDifficultyDialog(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
                       width: 1.2,
                     ),
                     boxShadow: const [
@@ -114,7 +114,7 @@ Future<GameDifficulty?> showDifficultyDialog(
         ),
       );
     },
-    transitionBuilder: (_, anim, __, child) {
+    transitionBuilder: (_, anim, _, child) {
       final curved = CurvedAnimation(parent: anim, curve: Curves.easeOut);
       return FadeTransition(
         opacity: curved,
