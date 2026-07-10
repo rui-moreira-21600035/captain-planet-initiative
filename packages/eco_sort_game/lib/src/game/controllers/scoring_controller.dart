@@ -11,19 +11,22 @@ class ScoringController {
   int get correct => _correct;
   int get wrong => _wrong;
 
-  void registerCorrect() {
+  void registerCorrect({int points = 10}) {
     _correct++;
     _streak++;
-    if (_streak > _streakMax) _streakMax = _streak;
 
-    // regra de pontos (ajusta depois)
-    _score += 10 + (_streak >= 3 ? 5 : 0);
+    if (_streak > _streakMax) {
+      _streakMax = _streak;
+    }
+
+    final streakBonus = _streak >= 3 ? 5 : 0;
+    _score += points + streakBonus;
   }
 
-  void registerWrong() {
+  void registerWrong({int penalty = 5}) {
     _wrong++;
     _streak = 0;
-    _score = (_score - 5).clamp(0, 1 << 30);
+    _score = (_score - penalty).clamp(0, 1 << 30);
   }
 
   void reset() {

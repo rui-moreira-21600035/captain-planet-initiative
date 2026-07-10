@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:common_gamekit/common_gamekit.dart';
 import 'package:eco_sort_game/src/domain/bin_type.dart';
+import 'package:eco_sort_game/src/domain/ecosort_difficulty_config.dart';
 import 'package:eco_sort_game/src/domain/ecosort_game_result.dart';
 import 'package:eco_sort_game/src/domain/ecosort_feedback.dart';
 import 'package:eco_sort_game/src/game/components/eco_sort_result_dialog.dart';
@@ -29,38 +30,87 @@ extension BinTypeLabels on BinType {
 
 class EcoSortPage extends StatefulWidget {
   final ScoreRepository scoreRepo;
+  final GameDifficulty initialDifficulty;
 
-  const EcoSortPage({super.key, required this.scoreRepo});
+  const EcoSortPage({
+    super.key,
+    required this.scoreRepo,
+    this.initialDifficulty = GameDifficulty.easy});
 
   @override
   State<EcoSortPage> createState() => _EcoSortPageState();
 }
 
 class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
-  late EcoSortFlameGame _game;
-
-  bool _saved = false;
-
+  bool _started = false;
+  GameDifficulty? _selectedDifficulty;
+  EcoSortFlameGame? _game;
+  
   StreamSubscription<EcoSortFeedback>? _feedbackSub;
   StreamSubscription<EcoSortGameResult>? _resultSub;
+
+  bool _saved = false;
 
   @override
   void initState() {
     super.initState();
 
+    // Fullscreen (esconde status + nav bars)
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
     WidgetsBinding.instance.addObserver(this);
     _lockLandscape();
 
-    _createNewGame();
+    _selectedDifficulty = widget.initialDifficulty;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+      if (_started) return;
+      _started = true;
+      
+      final started = await _startNewGameWithDifficultyPicker();
+      if (!mounted) return;
+
+      if (!started){
+        Navigator.of(context).pop();
+      }
+    });
+
+    // _createNewGame(_selectedDifficulty);
+  }
+
+  Future<bool> _startNewGameWithDifficultyPicker() async {
+    final choice = await showDifficultyDialog(
+      context,
+      initial: _selectedDifficulty,
+    );
+
+    if (!mounted) return false;
+
+    if (choice == null) {
+      return false;
+    }
+
+    _selectedDifficulty = choice;
+
+    setState(() {
+      _createNewGame();
+    });
+    return true;
   }
 
   void _createNewGame() {
     _feedbackSub?.cancel();
     _resultSub?.cancel();
 
-    _game = EcoSortFlameGame();
+    _saved = false;
 
-    _feedbackSub = _game.feedbackStream.listen((fb) {
+    final difficulty = _selectedDifficulty ?? widget.initialDifficulty;
+
+    final game = EcoSortFlameGame(difficulty: difficulty);
+
+    _game = game;
+
+    _feedbackSub = game.feedbackStream.listen((fb) {
       if (!mounted) return;
 
       final msg = fb.isCorrect
@@ -80,7 +130,11 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
         );
     });
 
-    _resultSub = _game.resultStream.listen((result) async {
+    _resultSub = game.resultStream.listen((result) async {
+      if (!mounted) return;
+
+      await _trySave(EndReason.completed);
+
       if (!mounted) return;
 
       await showDialog<void>(
@@ -91,52 +145,76 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
 
       if (!mounted) return;
 
-      final action = await showGameMenuDialog<GameMenuAction>(
-        context: context,
-        title: 'ECO SORT - MENU',
-        headerBadge: DifficultyBadge(
-          difficulty: GameDifficulty.easy,
-        ),
-        items: const [
-          //GameMenuItem(label: 'Retomar Jogo', value: GameMenuAction.resume, icon: Icon(Icons.play_arrow)),
-          GameMenuItem(
-            label: 'Reiniciar Jogo',
-            value: GameMenuAction.restart,
-            icon: Icon(Icons.refresh),
-
+      while(mounted){
+        final action = await showGameMenuDialog<GameMenuAction>(
+          context: context,
+          title: 'ECO SORT - MENU',
+          headerBadge: DifficultyBadge(
+            difficulty: _selectedDifficulty ?? GameDifficulty.easy,
           ),
-          GameMenuItem(
-            label: 'Sair do Jogo',
-            value: GameMenuAction.exit,
-            isDestructive: true,
-            icon: Icon(Icons.exit_to_app),
+          items: const [
+            //GameMenuItem(label: 'Retomar Jogo', value: GameMenuAction.resume, icon: Icon(Icons.play_arrow)),
+            GameMenuItem(
+              label: 'Reiniciar Jogo',
+              value: GameMenuAction.restart,
+              icon: Icon(Icons.refresh),
 
-          ),
-        ],
-      );
+            ),
+            GameMenuItem(
+              label: 'Sair do Jogo',
+              value: GameMenuAction.exit,
+              isDestructive: true,
+              icon: Icon(Icons.exit_to_app),
+            ),
+          ],
+        );
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      switch (action) {
-        case GameMenuAction.restart:
-          //_game.restart();
-          setState(() {
-            _saved = false;
-            _createNewGame();
-          });
-          break;
-        case GameMenuAction.exit:
-        case null:
-          Navigator.of(context).pop(result);
-          break;
-        case GameMenuAction.resume:
-          break;
+        switch (action) {
+          case GameMenuAction.restart:
+            final restarted = await _startNewGameWithDifficultyPicker();
+
+            if(!mounted) return;
+
+            if (restarted){
+              // User seleccionou dificuldade e clicou no botão começar
+              return;
+            }
+
+            // Cancelou reinicio -> volta ao menu
+            continue;
+
+          case GameMenuAction.exit:
+          case null:
+            final confirmed = await showConfirmExitDialog(context);
+            if (!mounted) return;
+
+            if (confirmed) {
+              await _trySave(EndReason.backToHub);
+              if (mounted){
+                Navigator.of(context).pop(result);
+              }
+              return;
+            }
+
+            // Cancelou saída: volta ao menu de fim de jogo.
+            continue;
+            
+          case GameMenuAction.resume:
+            continue;
+        }
       }
     });
   }
 
-  Future<void> _openMenu() async {
-    _game.pauseEngine();
+  Future<void> _openMenu({bool pauseGame = true, bool gameFinished = false}) async {
+    final game = _game;
+    if(game == null) return;
+
+    if (pauseGame && !gameFinished){
+      game.pauseEngine();
+    }
 
     while (mounted) {
       final action = await showGameMenuDialog<GameMenuAction>(
@@ -172,23 +250,27 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
       switch (action) {
         case null:
         case GameMenuAction.resume:
-          _game.resumeEngine();
+          if(!gameFinished){
+            game.resumeEngine();
+          }
           return;
 
-        case GameMenuAction.restart:
-          setState(() {
-            _saved = false;
-            _createNewGame();
-          });
-          return;
+        case GameMenuAction.restart: 
+          final restarted = await _startNewGameWithDifficultyPicker();
+          if(!mounted) return;
+
+          if (restarted){
+            // User seleccionou dificuldade e clicou no botão começar
+            return;
+          }
 
         case GameMenuAction.exit:
           final confirmed = await showConfirmExitDialog(context);
           if (!mounted) return;
 
           if (confirmed) {
-            await _trySave(EndReason.backToHub);
-            if (mounted) Navigator.of(context).pop();
+            //await _trySave(EndReason.backToHub);
+            Navigator.of(context).pop();
             return;
           }
 
@@ -235,9 +317,13 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
   // --- AQUI está a lógica de persistência ---
   Future<void> _trySave(EndReason reason) async {
     if (_saved) return;
+
+    final game = _game;
+    if (game == null) return;
+
     _saved = true;
 
-    final result = _game.buildResult(reason);
+    final result = game.buildResult(reason);
 
     // Não guardar sessões “vazias”
     // (ajustar conforme necessário)
@@ -251,16 +337,15 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
 
     final metricsJson = jsonEncode({
       'gameId': 'eco_sort',
+      'difficulty': _selectedDifficulty?.name,
+      'roundDurationSeconds': _selectedDifficulty?.roundDurationSeconds,
+      'configuredTotalRounds': _selectedDifficulty?.totalRounds,
       'endReason': reason.name,
       'correct': result.correct,
       'wrong': result.wrong,
       'streakMax': result.streakMax,
       'durationMs': result.durationMs,
       'roundsPlayed': result.totalRoundsPlayed,
-      // espaço para futuro:
-      // 'difficulty': 'normal',
-      // 'device': ...,
-      // etc.
     });
 
     // Criar entrada (idealmente via helper do repo local)
@@ -300,7 +385,11 @@ class _EcoSortPageState extends State<EcoSortPage> with WidgetsBindingObserver {
       child: Scaffold(
         body: Stack(
           children: [
-            GameWidget(game: _game),
+            if (_game == null)
+              const Center(child: CircularProgressIndicator(),
+              )
+            else
+              GameWidget(game: _game!),
 
             SafeArea(
               child: Align(

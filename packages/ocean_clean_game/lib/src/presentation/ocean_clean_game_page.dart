@@ -76,7 +76,6 @@ class _OceanCleanPageState extends State<OceanCleanPage> with WidgetsBindingObse
     _selectedDifficulty = choice;
 
     setState(() {
-      _selectedDifficulty = choice;
       _createNewGame();
     });
     return true;

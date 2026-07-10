@@ -1,6 +1,6 @@
 # Captain Planet Initiative
 
-Demonstration video: [Demo Captain Planet - TFC - Entrega Intercalar 2](https://youtu.be/OTToY88koIw)
+Demonstration video: [Demo Captain Planet - TFC - Entrega Final](https://www.youtube.com/watch?v=dvtONaCTHfg)
 
 Captain Planet Initiative is a Flutter monorepo for an educational minigames platform.
 It includes:
@@ -9,6 +9,7 @@ It includes:
 - `common_gamekit`: shared contracts and score persistence layer.
 - `eco_sort_game`: Eco Sort game module (Flame-based).
 - `eco_guess_game`: Eco Guess game module (hangman-style word guess with eco challenge content).
+- `ocean_clean_game`: Flame-based mini-game focused on marine pollution and ocean protection.
 - `eco_proto_game`: Eco Proto game module (Easter egg prototype mini-game, Flame-based).
 
 ## Current Games
@@ -17,13 +18,23 @@ It includes:
   - Goal: Place each waste item in the correct recycling container.
   - Flame-based game engine integration.
   - Hub integration via `GameModule` registry.
-  - Session results persisted locally via `sqflite`.
+  - Includes selectable difficulty levels.
+  - Provides immediate gameplay feedback and educational content.
 
 - **Eco Guess** (`id: eco_guess`)
   - Goal: Guess the hidden word related to eco-challenges.
   - Interactive UI with hints, difficulty levels, and limited lives.
   - Hub integration via `GameModule` registry.
   - Session results also persisted via `sqflite`.
+
+- **Ocean Clean** (`id: ocean_clean`)
+
+  - Goal: collect marine litter while protecting fish and preserving the ocean ecosystem.
+  - Flame-based game engine integration.
+  - Hub integration via `GameModule` registry.
+  - Includes selectable difficulty levels.
+  - Provides immediate gameplay feedback and educational content.
+  - Displays educational ocean facts.
 
 - **Eco Proto** (`id: eco_proto`)
   - Goal: Easter egg prototype mini-game for testing and experimentation.
@@ -42,6 +53,7 @@ It includes:
 │   ├── eco_sort_game/           # Eco Sort game package
 │   ├── eco_guess_game/          # Eco Guess game package
 │   └── eco_proto_game/          # Eco Proto game package
+│   ├── ocean_clean_game/        # Ocean Clean game package
 └── tools/
     ├── generate_eco_sort_catalog.py
     └── sanitize_assets.py
@@ -52,6 +64,7 @@ It includes:
 - Flutter SDK compatible with Dart`3.10.x`
 - macOS, Linux, or Windows for local development
 - Python 3 (for optional tooling scripts in`tools/`)
+- Android Virtual Device for android app testing 
 
 ## Quick Start
 
@@ -84,6 +97,7 @@ cd ../../packages/common_gamekit && flutter test
 cd ../eco_guess_game && flutter test
 cd ../eco_proto_game && flutter test
 cd ../eco_sort_game && flutter test
+cd ../ocean_clean_game && flutter test
 ```
 
 Run static analysis:
@@ -112,11 +126,11 @@ python3 tools/generate_eco_sort_catalog.py
 
 ## Hub App Features
 
-The hub app now features a 3-tab navigation architecture:
+The hub app features a 3-tab navigation architecture:
 
 - **Games Tab**: Lists available games (launcher functionality).
-- **Scores Tab**: Local leaderboard and future API-based global rankings.
-- **Settings Tab**: Sound and appearance preferences.
+- **Scores Tab**: interface reserved for local score check and future online rankings.
+- **Settings Tab**: structural basis for application-wide preferences, with global sound control still under development.
 
 ## Architecture Notes
 
@@ -128,10 +142,4 @@ The hub app now features a 3-tab navigation architecture:
   - `packages/eco_sort_game/lib/eco_sort_game.dart`
   - `packages/eco_guess_game/lib/eco_guess_game.dart`
   - `packages/eco_proto_game/lib/eco_proto_game.dart`
-
-## Roadmap
-
-- Add more minigames to the registry.
-- Expand automated tests (widget/integration coverage in`hub_app`).
-- Improve package-level README documentation for each module.
-- Create Backend for online scoreboards
+  - `packages/ocean_clean_game/lib/ocean_clean_game.dart`

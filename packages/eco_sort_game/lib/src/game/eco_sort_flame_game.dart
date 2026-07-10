@@ -4,6 +4,8 @@ import 'package:eco_sort_game/src/audio/ecosort_sfx_assets.dart';
 import 'package:eco_sort_game/src/domain/bin_type_mapper.dart';
 import 'package:eco_sort_game/src/domain/wrong_answer_record.dart';
 import 'package:eco_sort_game/src/game/components/countdown_ring_component.dart';
+import 'package:eco_sort_game/src/domain/ecosort_difficulty_config.dart';
+
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/text.dart';
@@ -54,12 +56,18 @@ class EcoSortFlameGame extends FlameGame {
   TextComponent? _loadingText;
   TextComponent? _errorText;
 
-  static const double roundSeconds = 10.0;
+  final GameDifficulty difficulty;
+
+  EcoSortFlameGame({
+    required this.difficulty,
+  });
+
+  double get roundSeconds => difficulty.roundDurationSeconds.toDouble();
 
   int? _lastTickSecond;
 
   late TimerComponent _roundTimerComp;
-  double _timeLeft = roundSeconds;
+  late double _timeLeft;
   double _getTimeLeft() => _timeLeft;
 
   // Feedback stream
@@ -70,6 +78,8 @@ class EcoSortFlameGame extends FlameGame {
   final StreamController<EcoSortGameResult> _resultCtrl =
       StreamController<EcoSortGameResult>.broadcast();
   Stream<EcoSortGameResult> get resultStream => _resultCtrl.stream;
+
+
 
   @override
   Future<void> onLoad() async {
@@ -92,6 +102,8 @@ class EcoSortFlameGame extends FlameGame {
 
     add(camera);
 
+    _timeLeft = roundSeconds;
+
     _scoring = ScoringController();
     _catalogLoader = CatalogLoader();
 
@@ -113,6 +125,7 @@ class EcoSortFlameGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
+
     if (_state != GameLoadState.ready) return;
 
     // countdown
@@ -168,8 +181,13 @@ class EcoSortFlameGame extends FlameGame {
     _inputLocked = true;
 
     final current = _waste.item;
+
+    final expected = current?.bin;
     if (current != null) {
       _scoring.registerWrong();
+      _wrongAnswers.add(
+        WrongAnswerRecord(item: current, chosen: null, expected: expected!),
+      );
 
       // Hint do contentor correcto
       _binComps[current.bin]?.playHintCorrect();
@@ -436,12 +454,14 @@ class EcoSortFlameGame extends FlameGame {
     final isCorrect = expected == chosen;
 
     if (isCorrect) {
-      _scoring.registerCorrect();
+      final points = difficulty.correctPoints +
+        difficulty.timeBonusFromSeconds(_timeLeft);
+
+      _scoring.registerCorrect(points: points);
       _binComps[chosen]?.playCorrect();
       _soundEffectPlugin.play(EcoSortSfxAssets.correct);
     } else {
-      _scoring.registerWrong();
-
+      _scoring.registerWrong(penalty: difficulty.wrongPenalty);
       _wrongAnswers.add(
         WrongAnswerRecord(item: current, chosen: chosen, expected: expected),
       );
@@ -477,7 +497,7 @@ class EcoSortFlameGame extends FlameGame {
   void _nextRound() {
     if (_state != GameLoadState.ready) return;
 
-    if (_rounds.totalRoundsPlayed >= maxRoundsPerSession) {
+    if (_rounds.totalRoundsPlayed >= difficulty.totalRounds) {
       _endGame(EndReason.completed);
       return;
     }
@@ -503,9 +523,9 @@ class EcoSortFlameGame extends FlameGame {
     _state = GameLoadState.finished;
     _inputLocked = true;
     _roundTimerComp.timer.stop();
+    pauseEngine();
 
     final result = buildResult(reason);
-
     if (!_resultCtrl.isClosed) {
       _resultCtrl.add(result);
     }
