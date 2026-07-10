@@ -2,6 +2,8 @@
 
 Demonstration video: [Demo Captain Planet - TFC - Entrega Final](https://www.youtube.com/watch?v=dvtONaCTHfg)
 
+APK: [app-release.apk](https://github.com/rui-moreira-21600035/captain-planet-initiative/blob/56f7465e1fca4e30d943b0a564f89eb595e71b0f/app-release.apk)
+
 Captain Planet Initiative is a Flutter monorepo for an educational minigames platform.
 It includes:
 
